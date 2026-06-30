@@ -285,10 +285,7 @@ if errorlevel 1 (
 echo.
 
 echo [NGINX] Setting up HTTPS reverse proxy (IP-only, self-signed)...
-if /i not "%SETUP_NGINX%"=="true" (
-    echo SETUP_NGINX is not 'true'. Skipping reverse proxy setup.
-    goto :nginx_done
-)
+if /i not "%SETUP_NGINX%"=="true" goto :nginx_skip
 
 set "NGINX_EXE=%NGINX_HOME%\nginx.exe"
 set "SSL_DIR=%NGINX_HOME%\ssl"
@@ -298,16 +295,13 @@ set "NGINX_ZIP=%TEMP%\nginx-%NGINX_VERSION%.zip"
 set "P12=%SSL_DIR%\warehouse.p12"
 
 REM 1) Download + unpack nginx if it is not installed yet
-if not exist "%NGINX_EXE%" (
-    echo Downloading nginx %NGINX_VERSION% ...
-    powershell -Command "try { [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%NGINX_URL%' -OutFile '%NGINX_ZIP%' } catch { Write-Host $_.Exception.Message; exit 1 }"
-    if errorlevel 1 (
-        echo ERROR: Could not download nginx. Check internet access on this server. Skipping proxy.
-        goto :nginx_done
-    )
-    echo Extracting nginx to %NGINX_HOME% ...
-    powershell -Command "Expand-Archive -Path '%NGINX_ZIP%' -DestinationPath '%TEMP%\nginx_x' -Force; $s=Get-ChildItem -Directory '%TEMP%\nginx_x' | Select-Object -First 1; New-Item -ItemType Directory -Force -Path '%NGINX_HOME%' | Out-Null; Copy-Item ($s.FullName+'\*') '%NGINX_HOME%' -Recurse -Force; Remove-Item '%TEMP%\nginx_x' -Recurse -Force"
-)
+if exist "%NGINX_EXE%" goto :nginx_installed
+echo Downloading nginx %NGINX_VERSION% ...
+powershell -NoProfile -Command "try { [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%NGINX_URL%' -OutFile '%NGINX_ZIP%' } catch { Write-Host $_.Exception.Message; exit 1 }"
+if errorlevel 1 goto :nginx_dlfail
+echo Extracting nginx to %NGINX_HOME% ...
+powershell -NoProfile -Command "Expand-Archive -Path '%NGINX_ZIP%' -DestinationPath '%TEMP%\nginx_x' -Force; $s=Get-ChildItem -Directory '%TEMP%\nginx_x' | Select-Object -First 1; New-Item -ItemType Directory -Force -Path '%NGINX_HOME%' | Out-Null; Copy-Item ($s.FullName+'\*') '%NGINX_HOME%' -Recurse -Force; Remove-Item '%TEMP%\nginx_x' -Recurse -Force"
+:nginx_installed
 
 REM 2) Make sure the folders nginx needs exist
 if not exist "%SSL_DIR%" mkdir "%SSL_DIR%"
@@ -315,31 +309,22 @@ if not exist "%NGINX_HOME%\logs" mkdir "%NGINX_HOME%\logs"
 if not exist "%NGINX_HOME%\temp" mkdir "%NGINX_HOME%\temp"
 
 REM 3) Create the self-signed cert (once) and convert it to PEM for nginx
-if not exist "%SSL_DIR%\fullchain.pem" (
-    echo Generating self-signed certificate for %SERVER_IP% ...
-    "%JDK_HOME%\bin\keytool.exe" -genkeypair -alias warehouse -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=%SERVER_IP%, O=Dogana e Kosoves, C=XK" -ext "SAN=IP:%SERVER_IP%" -storetype PKCS12 -keystore "%P12%" -storepass changeit -keypass changeit
-    if errorlevel 1 (
-        echo ERROR: keytool certificate generation failed. Skipping proxy.
-        goto :nginx_done
-    )
-    echo Converting certificate to PEM (via JDK helper, no OpenSSL needed)...
-    "%JDK_HOME%\bin\javac.exe" -d "%APP_DIR%\ssl-tools" "%APP_DIR%\ssl-tools\CertToPem.java"
-    if errorlevel 1 (
-        echo ERROR: Could not compile CertToPem.java. Skipping proxy.
-        goto :nginx_done
-    )
-    "%JDK_HOME%\bin\java.exe" -cp "%APP_DIR%\ssl-tools" CertToPem "%P12%" changeit warehouse "%SSL_DIR%"
-    if errorlevel 1 (
-        echo ERROR: PEM conversion failed. Skipping proxy.
-        goto :nginx_done
-    )
-)
+if exist "%SSL_DIR%\fullchain.pem" goto :nginx_havecert
+echo Generating self-signed certificate for %SERVER_IP% ...
+"%JDK_HOME%\bin\keytool.exe" -genkeypair -alias warehouse -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=%SERVER_IP%, O=Dogana e Kosoves, C=XK" -ext "SAN=IP:%SERVER_IP%" -storetype PKCS12 -keystore "%P12%" -storepass changeit -keypass changeit
+if errorlevel 1 goto :nginx_certfail
+echo Converting certificate to PEM (via JDK helper, no OpenSSL needed)...
+"%JDK_HOME%\bin\javac.exe" -d "%APP_DIR%\ssl-tools" "%APP_DIR%\ssl-tools\CertToPem.java"
+if errorlevel 1 goto :nginx_certfail
+"%JDK_HOME%\bin\java.exe" -cp "%APP_DIR%\ssl-tools" CertToPem "%P12%" changeit warehouse "%SSL_DIR%"
+if errorlevel 1 goto :nginx_certfail
+:nginx_havecert
 
 REM 4) Write nginx.conf from the template (fill in IP / backend / cert dir)
 echo Writing nginx configuration...
-powershell -Command "(Get-Content '%APP_DIR%\nginx\nginx.conf.template') -replace '__SERVER_NAME__','%SERVER_IP%' -replace '__BACKEND__','%BACKEND_HOSTPORT%' -replace '__SSL_DIR__','%SSL_DIR_FWD%' | Set-Content '%NGINX_HOME%\conf\nginx.conf' -Encoding ASCII"
+powershell -NoProfile -Command "(Get-Content '%APP_DIR%\nginx\nginx.conf.template') -replace '__SERVER_NAME__','%SERVER_IP%' -replace '__BACKEND__','%BACKEND_HOSTPORT%' -replace '__SSL_DIR__','%SSL_DIR_FWD%' | Set-Content '%NGINX_HOME%\conf\nginx.conf' -Encoding ASCII"
 
-REM 5) Open the Windows firewall for 80 and 443
+REM 5) Open the Windows firewall for 80 and 443 (needs admin to take effect)
 netsh advfirewall firewall delete rule name="Warehouse HTTP 80" >nul 2>&1
 netsh advfirewall firewall delete rule name="Warehouse HTTPS 443" >nul 2>&1
 netsh advfirewall firewall add rule name="Warehouse HTTP 80" dir=in action=allow protocol=TCP localport=80 >nul
@@ -348,21 +333,32 @@ netsh advfirewall firewall add rule name="Warehouse HTTPS 443" dir=in action=all
 REM 6) Validate the config and (re)start nginx
 pushd "%NGINX_HOME%"
 "%NGINX_EXE%" -t
-if errorlevel 1 (
-    echo ERROR: nginx config test failed - see messages above. Proxy not started.
-    popd
-    goto :nginx_done
-)
+if errorlevel 1 goto :nginx_testfail
 tasklist /fi "imagename eq nginx.exe" 2>nul | find /i "nginx.exe" >nul
-if errorlevel 1 (
-    echo Starting nginx...
-    start "" "%NGINX_EXE%"
-) else (
-    echo Reloading nginx...
-    "%NGINX_EXE%" -s reload
-)
+if errorlevel 1 goto :nginx_start
+echo Reloading nginx...
+"%NGINX_EXE%" -s reload
+goto :nginx_started
+:nginx_start
+echo Starting nginx...
+start "" "%NGINX_EXE%"
+:nginx_started
 popd
 echo nginx reverse proxy is running.
+goto :nginx_done
+
+:nginx_dlfail
+echo ERROR: Could not download nginx. Check internet access on this server.
+goto :nginx_done
+:nginx_certfail
+echo ERROR: Certificate generation/conversion failed. Proxy not started.
+goto :nginx_done
+:nginx_testfail
+echo ERROR: nginx config test failed - see messages above. Proxy not started.
+popd
+goto :nginx_done
+:nginx_skip
+echo SETUP_NGINX is not 'true'. Skipping reverse proxy setup.
 
 :nginx_done
 echo.
