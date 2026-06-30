@@ -27,6 +27,18 @@
     <welcome-file-list>
         <welcome-file>login.xhtml</welcome-file>
     </welcome-file-list>
+    <!-- Force all traffic onto HTTPS. The container redirects any plain HTTP
+         request to the secure listener (configured on port 443 by deploy.bat),
+         so users always end up on https://10.10.10.7/warehouse/ -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Entire Application</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
     <listener>
         <listener-class>mk.com.snt.kc.warehouse.view.security.ShiroCdiAwareEnvironmentLoaderListener</listener-class>
     </listener>

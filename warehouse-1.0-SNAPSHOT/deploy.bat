@@ -13,6 +13,16 @@ set "JDK_HOME=C:\Program Files\Java\jdk1.7.0_45"
 set "APP_DIR=%~dp0"
 set "CONTEXT_ROOT=/warehouse"
 set "APP_NAME=warehouse"
+
+REM --- SSL / HTTPS CONFIGURATION ---
+REM Put your certificate bundle (.pfx / .p12) here and set its password below.
+REM If the PFX file is not found, the SSL step is skipped automatically.
+set "PFX_FILE=%APP_DIR%\ssl\warehouse.pfx"
+set "PFX_PASSWORD=CHANGE_ME_PFX_PASSWORD"
+set "CERT_ALIAS=warehouse"
+set "HTTPS_PORT=443"
+REM GlassFish keystore password (default is 'changeit' on a stock install)
+set "GF_STOREPASS=changeit"
 REM ---------------------
 
 REM Ensure APP_DIR does not end with trailing backslash (for consistency)
@@ -105,6 +115,61 @@ powershell -Command ^
     "}"
 echo.
 
+echo [SSL] Configuring HTTPS on port %HTTPS_PORT%...
+set "KEYTOOL=%JDK_HOME%\bin\keytool.exe"
+set "KEYSTORE=%GLASSFISH_ROOT%\glassfish\domains\domain1\config\keystore.jks"
+if not exist "%PFX_FILE%" (
+    echo WARNING: Certificate "%PFX_FILE%" not found. Skipping SSL configuration.
+    goto :ssl_done
+)
+if not exist "%KEYTOOL%" (
+    echo WARNING: keytool.exe not found at "%KEYTOOL%". Skipping SSL configuration.
+    goto :ssl_done
+)
+
+REM Import the certificate into the GlassFish keystore only if not already there
+"%KEYTOOL%" -list -keystore "%KEYSTORE%" -storepass %GF_STOREPASS% -alias %CERT_ALIAS% >nul 2>&1
+if errorlevel 1 (
+    echo Importing certificate from "%PFX_FILE%" into the keystore...
+    REM Discover the private-key alias inside the PFX (varies per certificate)
+    set "PFX_LIST=%TEMP%\pfx_list_%RANDOM%.txt"
+    "%KEYTOOL%" -list -keystore "%PFX_FILE%" -storetype PKCS12 -storepass %PFX_PASSWORD% > "!PFX_LIST!" 2>nul
+    set "SRC_ALIAS="
+    for /f "tokens=1 delims=," %%i in ('findstr /i "PrivateKeyEntry" "!PFX_LIST!"') do (
+        if not defined SRC_ALIAS set "SRC_ALIAS=%%i"
+    )
+    del "!PFX_LIST!" >nul 2>&1
+    if not defined SRC_ALIAS (
+        echo ERROR: Could not read a private key from the PFX. Check PFX_PASSWORD. Skipping SSL.
+        goto :ssl_done
+    )
+    "%KEYTOOL%" -importkeystore -noprompt ^
+        -srckeystore "%PFX_FILE%" -srcstoretype PKCS12 -srcstorepass %PFX_PASSWORD% -srcalias "!SRC_ALIAS!" ^
+        -destkeystore "%KEYSTORE%" -deststoretype JKS -deststorepass %GF_STOREPASS% -destalias %CERT_ALIAS%
+    if errorlevel 1 (
+        echo ERROR: Certificate import failed. Skipping SSL configuration.
+        goto :ssl_done
+    )
+    echo Certificate imported as alias '%CERT_ALIAS%'.
+) else (
+    echo Certificate alias '%CERT_ALIAS%' already present in keystore. Skipping import.
+)
+
+REM Point the secure listener (http-listener-2) at the cert and move it to %HTTPS_PORT%
+call "%ASADMIN%" set configs.config.server-config.network-config.protocols.protocol.http-listener-2.ssl.cert-nickname=%CERT_ALIAS%
+call "%ASADMIN%" set configs.config.server-config.network-config.protocols.protocol.http-listener-2.security-enabled=true
+call "%ASADMIN%" set configs.config.server-config.network-config.network-listeners.network-listener.http-listener-2.port=%HTTPS_PORT%
+call "%ASADMIN%" set configs.config.server-config.network-config.network-listeners.network-listener.http-listener-2.enabled=true
+REM Make the HTTP->HTTPS redirect (web.xml CONFIDENTIAL) land on the clean 443 URL
+call "%ASADMIN%" set configs.config.server-config.network-config.protocols.protocol.http-listener-1.http.redirect-port=%HTTPS_PORT%
+
+echo Restarting domain to apply SSL settings...
+call "%ASADMIN%" restart-domain domain1
+echo SSL configuration applied.
+
+:ssl_done
+echo.
+
 echo [3/5] Compiling Java source files...
 REM Find javac.exe
 set "JAVAC=%JDK_HOME%\bin\javac.exe"
@@ -177,7 +242,7 @@ if errorlevel 1 (
 echo ==========================================================
 echo SUCCESS: Application compiled and deployed successfully!
 echo Context Root: %CONTEXT_ROOT%
-echo Access URL: http://10.10.10.7%CONTEXT_ROOT%/
+echo Access URL: https://10.10.10.7%CONTEXT_ROOT%/  (HTTP is redirected to HTTPS)
 echo ==========================================================
 pause
 exit /b 0
