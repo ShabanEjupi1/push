@@ -24,7 +24,11 @@ public class Initializator {
 
     @PostConstruct
     public void init() {
-        this.initUser();
+        try {
+            this.initUser();
+        } catch (Exception e) {
+            System.err.println("[Initializator] Startup DB check failed: " + e.getMessage());
+        }
     }
 
     private void initUser() {
