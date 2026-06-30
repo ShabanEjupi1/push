@@ -28,7 +28,8 @@ body {
 .ui-layout-north .ui-layout-unit-content {
     background: #ffffff !important;
     overflow: visible !important;
-    padding: 0 20px !important;
+    padding: 0 16px !important;
+    box-sizing: border-box !important;
 }
 
 #top_wrapper {
@@ -43,12 +44,13 @@ body {
     width: 100% !important;
 }
 
-/* Header table layout */
+/* Header table layout — fluid, no fixed column widths */
 #mainMenuPanel > table {
     width: 100% !important;
     border-collapse: collapse !important;
     border: none !important;
-    margin-top: 8px !important;
+    margin-top: 6px !important;
+    table-layout: auto !important;
 }
 
 #mainMenuPanel > table > tbody > tr > td {
@@ -58,12 +60,14 @@ body {
 }
 
 #mainMenuPanel > table > tbody > tr > td:nth-child(1) {
-    width: 80px !important;
+    width: 1% !important;
+    white-space: nowrap !important;
     text-align: left !important;
 }
 
 #mainMenuPanel > table > tbody > tr > td:nth-child(2) {
-    width: 80px !important;
+    width: 1% !important;
+    white-space: nowrap !important;
     text-align: left !important;
 }
 
@@ -71,9 +75,9 @@ body {
     width: 100% !important;
 }
 
-/* Logo images */
+/* Logo images — scale with viewport */
 #mainMenuPanel img {
-    height: 56px !important;
+    height: clamp(36px, 4vw, 56px) !important;
     width: auto !important;
     display: inline-block !important;
     vertical-align: middle !important;
@@ -107,18 +111,19 @@ body {
     text-align: right;
     font-weight: 600 !important;
     color: #2563eb !important;
-    font-size: 13px !important;
+    font-size: clamp(10px, 1.1vw, 13px) !important;
     letter-spacing: -0.01em;
+    white-space: nowrap !important;
 }
 
-/* Login Panel Styling (Modern Sleek Card) */
+/* Login Panel Styling — fluid, centered */
 .login_panel {
     display: block;
     position: absolute;
     top: 50% !important;
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
-    width: 420px !important;
+    width: min(420px, calc(100vw - 40px)) !important;
     height: auto !important;
     background: #ffffff !important;
     border: 1px solid #f3f4f6 !important;
@@ -166,7 +171,9 @@ body {
 
 .ui-layout-center .ui-layout-unit-content {
     background-color: #f3f4f6 !important;
-    padding: 24px !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
 }
 
 /* Common CSS classes */
@@ -230,8 +237,8 @@ body {
 
 /* Scrollbar customization */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -245,4 +252,46 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* Large desktops — no change needed, base styles apply */
+
+/* Medium screens: laptops and tablets in landscape */
+@media (max-width: 1200px) {
+    .ui-layout-center .ui-layout-unit-content {
+        padding: 16px !important;
+    }
+}
+
+/* Small screens: tablets in portrait */
+@media (max-width: 900px) {
+    .ui-layout-north .ui-layout-unit-content {
+        padding: 0 8px !important;
+    }
+    .ui-layout-center .ui-layout-unit-content {
+        padding: 12px !important;
+    }
+    .user_logged_in {
+        font-size: 11px !important;
+    }
+    #mainMenuPanel > table {
+        margin-top: 4px !important;
+    }
+}
+
+/* Extra small: narrow windows or small tablets */
+@media (max-width: 640px) {
+    .ui-layout-center .ui-layout-unit-content {
+        padding: 8px !important;
+    }
+    .login_panel {
+        padding: 20px !important;
+    }
+    .login_panel .ui-panel-titlebar {
+        font-size: 17px !important;
+    }
 }
