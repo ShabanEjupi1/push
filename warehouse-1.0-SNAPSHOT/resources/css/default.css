@@ -68,8 +68,7 @@ body {
 }
 
 #mainMenuPanel > table > tbody > tr > td:nth-child(3) {
-    width: auto !important;
-    text-align: right !important;
+    width: 100% !important;
 }
 
 /* Logo images */
@@ -82,13 +81,12 @@ body {
 
 /* Header panel containing toolbar and user info */
 .ui-layout-north .template_header_panel {
-    margin-left: auto !important;
+    margin-left: 0 !important;
     margin-right: 0 !important;
     margin-top: 0 !important;
-    width: auto !important;
-    max-width: 100% !important;
+    width: 100% !important;
     background: transparent !important;
-    display: inline-table !important;
+    display: table !important;
     border-collapse: separate !important;
     border-spacing: 0 !important;
 }
