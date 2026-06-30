@@ -70,9 +70,12 @@ public class SearchCriteria {
             if (value instanceof String && Utils.isNullOrEmpty((String)value)) {
                 return this;
             }
-            String parmName = this.getParameterName();
-            this.whereConditions.add("(" + field1 + " = :" + parmName + " OR " + field2 + " = :" + parmName + ")");
-            this.parameters.add(new Parameter(parmName, value));
+            String base = this.getParameterName();
+            String parm1 = base + "a";
+            String parm2 = base + "b";
+            this.whereConditions.add("(" + field1 + " = :" + parm1 + " OR " + field2 + " = :" + parm2 + ")");
+            this.parameters.add(new Parameter(parm1, value));
+            this.parameters.add(new Parameter(parm2, value));
         }
         return this;
     }

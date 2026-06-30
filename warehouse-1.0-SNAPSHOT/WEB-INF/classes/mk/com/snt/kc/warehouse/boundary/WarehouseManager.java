@@ -97,11 +97,11 @@ public class WarehouseManager {
     }
 
     public int countLatestExits(String trader) {
-        return this.crudService.findSingleWithNamedQuery("WarehouseExit.countLatestByTrader", QueryParameter.with("date", Utils.minusDays(new Date(), 1)).and("trader", trader).parameters(), Long.class).intValue();
+        return this.crudService.findSingleWithNamedQuery("WarehouseExit.countLatestByTrader", QueryParameter.with("date", Utils.minusDays(new Date(), 1)).and("trader", trader).and("whsOwner", trader).parameters(), Long.class).intValue();
     }
 
     public List<WarehouseExit> getLatestExits(String trader, int first, int pageSize) {
-        return this.crudService.findWithNamedQuery("WarehouseExit.latestByTrader", QueryParameter.with("date", Utils.minusDays(new Date(), 1)).and("trader", trader).parameters(), first, pageSize);
+        return this.crudService.findWithNamedQuery("WarehouseExit.latestByTrader", QueryParameter.with("date", Utils.minusDays(new Date(), 1)).and("trader", trader).and("whsOwner", trader).parameters(), first, pageSize);
     }
 
     public int countTodaysExits(WarehouseInventory warehouseInventory) {
