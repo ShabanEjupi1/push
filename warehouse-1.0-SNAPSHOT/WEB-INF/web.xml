@@ -27,18 +27,11 @@
     <welcome-file-list>
         <welcome-file>login.xhtml</welcome-file>
     </welcome-file-list>
-    <!-- Force all traffic onto HTTPS. The container redirects any plain HTTP
-         request to the secure listener (configured on port 443 by deploy.bat),
-         so users always end up on https://10.10.10.7/warehouse/ -->
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>Entire Application</web-resource-name>
-            <url-pattern>/*</url-pattern>
-        </web-resource-collection>
-        <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
+    <!-- NOTE: HTTPS is terminated by the nginx reverse proxy in front of GlassFish.
+         GlassFish itself serves plain HTTP on 8080; nginx handles the HTTP->HTTPS
+         redirect. Do NOT add a CONFIDENTIAL security-constraint here, or requests
+         coming from the proxy (plain HTTP) will trigger an infinite redirect loop. -->
+
     <listener>
         <listener-class>mk.com.snt.kc.warehouse.view.security.ShiroCdiAwareEnvironmentLoaderListener</listener-class>
     </listener>
