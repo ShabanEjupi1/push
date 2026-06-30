@@ -34,8 +34,7 @@
                     <p:dataTable value="#{excelReportBean.previewData}" var="row" 
                                  rows="10" paginator="true" paginatorPosition="bottom"
                                  paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}">
-                        <p:columns value="#{excelReportBean.columnNames}" var="col"
-                                   filterBy="#{row[col]}" filterMatchMode="contains">
+                        <p:columns value="#{excelReportBean.columnNames}" var="col">
                             <f:facet name="header">
                                 <h:outputText value="#{col}" />
                             </f:facet>

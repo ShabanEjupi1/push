@@ -201,7 +201,7 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
     margin-bottom: 24px !important;
     padding: 0 !important;
-    overflow: visible !important;
+    overflow: hidden !important;
 }
 
 .ui-panel .ui-panel-titlebar {
@@ -230,7 +230,7 @@
 .ui-datatable {
     border: 1px solid #e5e7eb !important;
     border-radius: 8px !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
     width: 100% !important;
 }
@@ -489,165 +489,4 @@
     padding: 0 !important;
     overflow: hidden !important;
     background: #F8F8F8 !important;
-}
-
-/* ============================================================
-   RESPONSIVE — Data tables, dialogs, panels, toolbar
-   ============================================================ */
-
-/* Horizontal scroll for all data tables — critical for wide tables */
-.ui-datatable .ui-datatable-tablewrapper {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    width: 100% !important;
-}
-
-/* Panels: change overflow so inner table scroll works */
-.ui-panel {
-    overflow: visible !important;
-}
-/* Re-clip header and footer corners without overflow:hidden on wrapper */
-.ui-panel .ui-panel-titlebar {
-    border-radius: 12px 12px 0 0 !important;
-}
-.ui-panel .ui-panel-footer {
-    border-radius: 0 0 12px 12px !important;
-}
-
-/* Panels fluid width */
-.ui-panel,
-.ui-datatable {
-    max-width: 100% !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* Dialogs: never wider than viewport */
-.ui-dialog {
-    max-width: 96vw !important;
-    box-sizing: border-box !important;
-}
-.ui-dialog .ui-dialog-content {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* Dialogs: inner panelgrids and tables scroll rather than overflow */
-.ui-dialog .ui-panelgrid,
-.ui-dialog table {
-    max-width: 100% !important;
-}
-
-/* Input fields: fluid within their containers */
-.ui-inputfield,
-.ui-inputtext,
-.ui-password,
-.ui-textarea,
-.ui-selectonemenu {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* Excel report panel — fluid date pickers */
-.no_border_grid .ui-calendar {
-    max-width: 100% !important;
-}
-
-/* Paginator — wrap on small screens */
-.ui-paginator {
-    flex-wrap: wrap !important;
-}
-
-/* ---- Media queries ---- */
-
-/* Medium screens */
-@media (max-width: 1200px) {
-    .ui-widget {
-        font-size: 12px !important;
-    }
-    .ui-datatable th {
-        font-size: 9px !important;
-        padding: 6px 6px !important;
-    }
-    .ui-datatable td {
-        font-size: 11px !important;
-        padding: 5px 6px !important;
-    }
-}
-
-/* Tablets and small desktops */
-@media (max-width: 900px) {
-    /* Toolbar — allow wrapping on smaller screens */
-    .ui-toolbar {
-        flex-wrap: wrap !important;
-        padding: 4px 8px !important;
-        gap: 4px !important;
-    }
-    .ui-toolbar-group-right {
-        flex-wrap: wrap !important;
-        gap: 4px !important;
-    }
-    .ui-toolbar .ui-button {
-        font-size: 11px !important;
-        padding: 4px 7px !important;
-    }
-    .ui-toolbar .ui-button-icon-only {
-        width: 26px !important;
-        height: 26px !important;
-    }
-    /* Panels: reduce padding */
-    .ui-panel .ui-panel-content {
-        padding: 12px !important;
-    }
-    .ui-panel .ui-panel-titlebar {
-        padding: 10px 14px !important;
-        font-size: 13px !important;
-    }
-    /* Dialogs */
-    .ui-dialog .ui-dialog-content {
-        padding: 12px !important;
-    }
-    /* Buttons */
-    .ui-button {
-        font-size: 12px !important;
-        padding: 5px 10px !important;
-    }
-    /* Footer panel buttons */
-    .ui-panel-footer .ui-button,
-    .ui-dialog-buttonpane .ui-button {
-        min-width: 80px !important;
-    }
-}
-
-/* Narrow screens */
-@media (max-width: 640px) {
-    .ui-widget {
-        font-size: 11px !important;
-    }
-    .ui-panel .ui-panel-content {
-        padding: 8px !important;
-    }
-    .ui-panel .ui-panel-footer {
-        padding: 8px !important;
-    }
-    /* Stack toolbar groups vertically */
-    .ui-toolbar {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-    }
-    .ui-toolbar-group-right {
-        margin-left: 0 !important;
-        margin-top: 4px !important;
-    }
-    /* Paginator: smaller */
-    .ui-paginator-page,
-    .ui-paginator-next,
-    .ui-paginator-prev,
-    .ui-paginator-first,
-    .ui-paginator-last {
-        padding: 3px 7px !important;
-        font-size: 11px !important;
-    }
 }
