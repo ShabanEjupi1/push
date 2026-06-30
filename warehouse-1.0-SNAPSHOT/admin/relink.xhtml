@@ -1,0 +1,414 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:snt="http://java.sun.com/jsf/composite/snt"
+                template="/WEB-INF/templates/auth_template.xhtml">
+
+    <ui:define name="content">
+        <f:event type="preRenderView" listener="#{relinkBean.init()}"/>
+        <p:panel header="#{msgs.relink}">
+            <h:form id="form">
+                <p:blockUI block="form:wTable" trigger="form:wTable">  
+                    LOADING<br />  
+                    <p:graphicImage value="/resources/images/ajax-loader.gif"/>  
+                </p:blockUI>
+                <p:blockUI block="resultsPanel" widgetVar="blockPage">
+                    LOADING<br />  
+                    <p:graphicImage value="/resources/images/ajax-loader.gif"/>  
+                </p:blockUI>
+                <!-- Search panel -->
+                <h:panelGroup id="page">
+                    <p:panel id="searchPanel">
+
+                        <h:panelGrid columns="3">
+                            <h:outputText value="#{msgs.traderFiscalNumber}" />
+                            <p:autoComplete value="#{relinkBean.trader}"
+                                            completeMethod="#{alBean.completeTrader}"  
+                                            var="t" itemLabel="#{t.fiscalNumber}" itemValue="#{t}" 
+                                            converter="traderConverter" size="10"
+                                            forceSelection="true" dropdown="true" minQueryLength="3">  
+                                <p:ajax event="itemSelect" listener="#{relinkBean.onSelectTrader}" 
+                                        update=":form:traderPanel" process="@this"/>  
+                                <p:column width="30">#{t.fiscalNumber}</p:column> 
+                                <p:column width="150">#{t.name}</p:column>
+                            </p:autoComplete> 
+                            <h:panelGroup id="traderPanel">
+                                <p:inputText value="#{relinkBean.trader.display}" disabled="true" size="100"/>
+                            </h:panelGroup>
+                        </h:panelGrid>                    
+
+
+                        <f:facet name="footer">
+                            <h:panelGrid columns="3">
+                                <p:commandButton icon="ui-icon-search" title="#{msgs.search}" action="#{relinkBean.search()}" 
+                                                 process="searchPanel" update="@form"
+                                                 onstart="wTable.getPaginator().setPage(0);"/>
+                                <p:commandButton icon="ui-icon-close" title="#{msgs.cancel}" action="#{relinkBean.cancel()}" 
+                                                 immediate="true" process="searchPanel" update="@form">
+                                    <p:resetInput target="searchPanel" />
+                                </p:commandButton>
+                            </h:panelGrid>
+                        </f:facet>
+
+                    </p:panel>
+
+                    <p:panel id="resultsPanel">
+
+                        <p:dataTable var="w" value="#{relinkBean.im7Data}" rowKey="#{w.wi.id}" lazy="true"
+                                     paginator="true" rows="10"  paginatorPosition="bottom"
+                                     id="wTable" widgetVar="wTable" 
+                                     paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport} "
+                                     currentPageReportTemplate="#{msgs.records_no} {totalRecords}">  
+                            <p:column headerText="#{msgs.traderFiscalNumber}" sortBy="traderFiscalNumber" id="traderColumn">  
+                                <h:outputText value="#{w.wi.traderFiscalNumber}"/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.registrationDate}" sortBy="registrationDate" id="regDateColumn">  
+                                <snt:outputDate value="#{w.wi.registrationDate}"/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.officeCode}" sortBy="officeCode" id="officeCodeColumn">  
+                                <h:outputText value="#{w.wi.officeCode}" title="#{w.wi.officeName} "/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.registerNumber}" sortBy="registerNumber"  id="regNoColumn">  
+                                #{w.wi.registerNumberDisplay} 
+                            </p:column>  
+                            <p:column headerText="#{msgs.sadItemNbr}" sortBy="sadItemNbr"  id="itseqnoColumn">  
+                                #{w.wi.sadItemNbr} 
+                            </p:column>  
+                            <p:column headerText="#{msgs.tariff}" sortBy="tariff"  id="tariffColumn">  
+                                #{w.wi.tariff}  
+                            </p:column>  
+                            <p:column headerText="#{msgs.countryOfOrigin}" sortBy="countryOfOrigin"  id="originColumn">  
+                                #{w.wi.countryOfOrigin}  
+                            </p:column> 
+                            <p:column headerText="#{msgs.goodsDescription}" sortBy="goodsDescription"  id="goodsDescColumn" style="width: 30px">  
+                                <p:commandButton id="details" icon="ui-icon-note" disabled="true"
+                                                 style="width: 20px; height: 20px"/>
+                                <p:overlayPanel for="details" showEffect="blind"  showEvent="mouseover" hideEvent="mouseout"  
+                                                showCloseIcon="true">  
+                                    #{w.wi.goodsDescription}
+                                </p:overlayPanel>  
+                            </p:column> 
+                            <p:column headerText="#{msgs.inputNetWeight}" sortBy="inputNetWeight" style="text-align: right" id="inetColumn">  
+                                <snt:outputDecimal value="#{w.wi.inputNetWeight}"/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.remainingNetWeight}" sortBy="remainingNetWeight" style="text-align: right" id="rnetColumn">  
+                                <snt:outputDecimal value="#{w.remainingNetWeight}"/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.registeredExitNWGT}" sortBy="remainingNetWeight" style="text-align: right" >  
+                                <snt:outputDecimal value="#{w.netWeightOut}"/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.im4NetWeight}" sortBy="im4NetWeight" style="text-align: right" id="im4netColumn">  
+                                <snt:outputDecimal value="#{w.wi.im4NetWeight}"/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.inputQuantity}" sortBy="inputQuantity" style="text-align: right" id="iqtyColumn">  
+                                <snt:outputDecimal value="#{w.inputQuantity}"/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.remainingQuantity}" sortBy="remainingQuantity" style="text-align: right" id="rqtyColumn">  
+                                <snt:outputDecimal value="#{w.remainingQuantity}"/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.registeredExitQTY}" sortBy="remainingQuantity" style="text-align: right">  
+                                <snt:outputDecimal value="#{w.quantityOut}"/>
+                            </p:column>  
+                            <p:column headerText="#{msgs.im4Quantity}" sortBy="im4Quantity" style="text-align: right" id="im4qtyColumn">  
+                                <snt:outputDecimal value="#{w.wi.im4Quantity}"/>
+                            </p:column>  
+        <!--                    <p:column headerText="#{msgs.measurementUnit}" sortBy="measurementUnit" style="text-align: right" id="muColumn">  
+                            #{w.wi.measurementUnit}  
+                        </p:column>  -->
+                            <p:column headerText="#{msgs.customsValue}" sortBy="customsValue" 
+                                      style="text-align: right" id="valueColumn"> 
+                                <snt:outputDecimal value="#{w.value}"/>
+                            </p:column>
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton id="infoBtn" icon="ui-icon-info" disabled="true"
+                                                     style="width: 20px; height: 20px"/>
+                                    <p:overlayPanel for="infoBtn" showEffect="blind"  showEvent="mouseover" hideEvent="mouseout"  
+                                                    showCloseIcon="true">  
+                                        #{msgs.relink_im7_table_info}
+                                    </p:overlayPanel>  
+                                </f:facet>
+                                <p:commandButton icon="ui-icon-transferthick-e-w"
+                                                 title="#{msgs.relink}"
+                                                 action="#{relinkBean.selectItem(w)}"
+                                                 process="@this" update=":relinkForm"
+                                                 onstart="blockPage.show();"
+                                                 oncomplete="blockPage.hide();relinkDlg.show();"
+                                                 style="width: 20px; height: 20px"
+                                                 id="showRelinkBtn"/>
+                            </p:column>
+                        </p:dataTable>  
+                    </p:panel>
+                </h:panelGroup>
+            </h:form>
+
+        </p:panel>
+    </ui:define>
+
+    <ui:define name="otherContent">
+        <p:dialog widgetVar="relinkDlg" header="#{msgs.relink}" closeOnEscape="true" closable="true"
+                  modal="true">
+            <h:form id="relinkForm" onkeypress="if (event.which == 13)
+                        event.preventDefault();">
+                <p:blockUI block="dlgResults" widgetVar="blockDlg">
+                    LOADING<br />  
+                    <p:graphicImage value="/resources/images/ajax-loader.gif"/>  
+                </p:blockUI>
+                <p:panel header="IM7">
+
+                    <p:panelGrid styleClass="no_border_grid">
+                        <p:row>
+                            <p:column>
+                                <h:outputText value="#{msgs.registerNumber}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{relinkBean.selectedItem.wi.registerNumberDisplay}"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.tariff}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{relinkBean.selectedItem.wi.tariff}"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.officeCode}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{relinkBean.selectedItem.wi.officeCode}"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.inputNetWeight}" style="font-weight: bold;"/>
+                            </p:column>
+
+                            <p:column styleClass="column_right">
+                                <snt:inputDecimal value="#{relinkBean.selectedItem.inputNetWeight}" disabled="true"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.remainingNetWeight}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column styleClass="column_right">
+                                <snt:inputDecimal value="#{relinkBean.selectedItem.remainingNetWeight}" disabled="true"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.im4NetWeight}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column styleClass="column_right">
+                                <snt:inputDecimal value="#{relinkBean.selectedItem.wi.im4NetWeight}" disabled="true"/>
+                            </p:column>
+
+                        </p:row>
+                        <p:row>
+                            <p:column>
+                                <h:outputText value="#{msgs.registrationDate}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column>
+                                <snt:outputDate value="#{relinkBean.selectedItem.wi.registrationDate}"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.countryOfOrigin}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{relinkBean.selectedItem.wi.countryOfOrigin}"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.officeName}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{relinkBean.selectedItem.wi.officeName}"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.inputQuantity}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column styleClass="column_right">
+                                <snt:inputDecimal value="#{relinkBean.selectedItem.inputQuantity}" disabled="true"/>
+                            </p:column>
+
+                            <p:column>
+                                <h:outputText value="#{msgs.remainingQuantity}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column styleClass="column_right">
+                                <snt:inputDecimal value="#{relinkBean.selectedItem.remainingQuantity}" disabled="true"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.im4Quantity}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column styleClass="column_right">
+                                <snt:inputDecimal value="#{relinkBean.selectedItem.wi.im4Quantity}" disabled="true"/>
+                            </p:column>
+                        </p:row>
+                        <p:row>
+                            <p:column>
+                                <h:outputText value="#{msgs.traderFiscalNumber}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{relinkBean.selectedItem.wi.traderFiscalNumber}"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.sadItemNbr}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{relinkBean.selectedItem.wi.sadItemNbr}"/>
+                            </p:column>
+                            <p:column>
+                                <h:outputText value="#{msgs.goodsDescription}" style="font-weight: bold;"/>
+                            </p:column>
+                            <p:column colspan="7">
+                                <h:outputText value="#{relinkBean.selectedItem.wi.goodsDescription}"/>
+                            </p:column>
+
+                        </p:row>
+
+                    </p:panelGrid>
+                </p:panel>
+                <p:panel header="#{msgs.relink_undeclared_exits}" id="dlgResults" rendered="#{relinkBean.selectedItem != null}">
+                    <p:dataTable value="#{relinkBean.exitsData}" var="we" rows="5" lazy="true"
+                                 paginator="true" paginatorPosition="bottom"
+                                 paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport} "
+                                 currentPageReportTemplate="#{msgs.records_no} {totalRecords}"
+                                 rowStyleClass="warehouse_exit_#{we.status}">
+                        <p:column headerText="#{msgs.exitDate}" style="text-align: right">
+                            <snt:outputDate value="#{we.exitDate}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.registrationDate}" style="text-align: right">
+                            <snt:outputDate value="#{we.registrationDate}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.officeCode}" style="text-align: left">
+                            <h:outputText value="#{we.officeCode}" title="#{we.officeName}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.registerNumber}" style="text-align: left">
+                            <h:outputText value="#{we.registerNumberDisplay}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.sadItemNbr}" style="text-align: right">
+                            <h:outputText value="#{we.sadItemNbr}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.tariff}" style="text-align: right">
+                            <h:outputText value="#{we.tariff}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.countryOfOrigin}" style="text-align: left">
+                            <h:outputText value="#{we.countryOfOrigin}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.goodsDescription}" style="text-align: left">
+                            <p:commandButton id="details" icon="ui-icon-note" disabled="true"
+                                             style="width: 20px; height: 20px"/>
+                            <p:overlayPanel for="details" showEffect="blind"  showEvent="mouseover" hideEvent="mouseout"  
+                                            showCloseIcon="true">  
+                                #{we.goodsDescription}
+                            </p:overlayPanel>  
+                        </p:column>
+                        <p:column headerText="#{msgs.netWeightOut}" style="text-align: right">
+                            <snt:outputDecimal value="#{we.netWeightOut}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.grossWeightOut}" style="text-align: right">
+                            <snt:outputDecimal value="#{we.grossWeightOut}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.quantityOut}" style="text-align: right">
+                            <snt:outputDecimal value="#{we.quantityOut}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.stockValue}" style="text-align: right">
+                            <snt:outputDecimal value="#{we.stockValue}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.exitReference}" style="text-align: left">
+                            <h:outputText value="#{we.exitReference}"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.note}" style="text-align: left;white-space: normal;">
+                            <h:outputText value="#{we.note}"/>
+                        </p:column>
+                        <p:column>
+                            <p:commandButton icon="ui-icon-transferthick-e-w"
+                                             title="#{msgs.relink}"
+                                             action="#{relinkBean.relinkExit(we)}"
+                                             update=":form" process="@this"
+                                             onstart="blockDlg.show()" 
+                                             oncomplete="onSave(xhr, status, args)"
+                                             style="width: 20px; height: 20px"/>
+                        </p:column>
+                    </p:dataTable>
+                </p:panel>
+            </h:form>
+        </p:dialog>
+        <script type="text/javascript">
+            function onSave(xhr, status, args) {
+                if (!args.validationFailed) {
+                    relinkDlg.hide();
+                }
+                blockDlg.hide();
+            }
+        </script>
+    </ui:define>    
+
+    <!-- Help Panel -->
+    <ui:define name="helpContent">
+        <p:panel header="#{msgs.home_help_header}">
+
+            <p:panelGrid styleClass="no_border_grid">
+
+                <p:row>
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.relink_help_1}"/>
+                    </p:column>
+                </p:row>
+                <p:row>
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.daily_exits_help_3}" style="font-weight: bold;"/>
+                    </p:column>
+                </p:row>
+                <p:row>
+                    <p:column>
+                        <span class="ui-icon ui-icon-search ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.daily_exits_help_4}"/>
+                    </p:column>
+                </p:row>
+                <p:row>
+                    <p:column>
+                        <span class="ui-icon ui-icon-close ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.daily_exits_help_5}"/>
+                    </p:column>
+                </p:row>
+                <p:row>
+                    <p:column>
+                        <span class="ui-icon ui-icon-transferthick-e-w ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.relink_help_2}"/>
+                    </p:column>
+                </p:row>
+
+                <p:row rendered="#{dailyExitsBean.storn}">
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.storn_help_actions}" style="font-weight: bold;"/>
+                    </p:column>
+                </p:row>
+
+                <p:row rendered="#{dailyExitsBean.storn}">
+                    <p:column>
+                        <span class="ui-icon ui-icon-close ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.daily_exits_help_storn}"/>
+                    </p:column>
+                </p:row>
+
+                <p:row rendered="#{dailyExitsBean.storn}">
+                    <p:column>
+                        <span class="ui-icon ui-icon-circle-check ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.daily_exits_help_storn_perform}"/>
+                    </p:column>
+                </p:row>
+
+            </p:panelGrid>
+
+            <!-- Common actions -->
+            <ui:include src="../help.xhtml"/>            
+
+        </p:panel>
+    </ui:define>
+
+</ui:composition>
