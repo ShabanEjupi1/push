@@ -1,0 +1,28 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/auth_template.xhtml">
+    <ui:define name="content">
+        <f:event type="preRenderView" listener="#{excelReportBean.init}"/>
+        <h:form id="form">
+            <p:panel id="excelPanel" header="#{msgs.excel_report_title}">
+                <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true" />
+                <h:panelGrid columns="2" cellpadding="10" styleClass="no_border_grid">
+                    <h:outputText value="#{msgs.excel_date_from}:" style="font-weight: bold;" />
+                    <p:calendar value="#{excelReportBean.dateFrom}" pattern="dd.MM.yyyy" showOn="button" required="true" label="From Date" />
+
+                    <h:outputText value="#{msgs.excel_date_to}:" style="font-weight: bold;" />
+                    <p:calendar value="#{excelReportBean.dateTo}" pattern="dd.MM.yyyy" showOn="button" required="true" label="To Date" />
+                </h:panelGrid>
+                <f:facet name="footer">
+                    <p:commandButton value="#{msgs.excel_download_btn}"
+                                     action="#{excelReportBean.exportExcel()}"
+                                     ajax="false"
+                                     icon="ui-icon-arrowthick-1-s" />
+                </f:facet>
+            </p:panel>
+        </h:form>
+    </ui:define>
+</ui:composition>

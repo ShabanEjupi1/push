@@ -1,0 +1,497 @@
+/* PrimeFaces Modern Styling Overrides */
+
+/* Typography & Widgets */
+.ui-widget {
+    font-size: 13px !important;
+}
+
+.ui-corner-all {
+    border-radius: 8px !important;
+}
+
+/* Toolbars (Navigation Headers) */
+.ui-toolbar {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 6px 12px !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    border-radius: 8px !important;
+    margin-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    row-gap: 8px !important;
+    column-gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.ui-toolbar-group-left {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    float: none !important;
+}
+
+.ui-toolbar-group-right {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    float: none !important;
+    margin-left: auto !important;
+}
+
+/* Input Fields (Text, Password, Textarea) */
+.ui-inputfield, 
+.ui-inputtext, 
+.ui-password, 
+.ui-textarea,
+.ui-selectonemenu {
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    color: #1f2937 !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    font-size: 13px !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+.ui-inputfield:hover,
+.ui-selectonemenu:hover {
+    border-color: #9ca3af !important;
+}
+
+.ui-inputfield.ui-state-focus,
+.ui-selectonemenu.ui-state-focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    outline: none !important;
+}
+
+/* Dropdown styling */
+.ui-selectonemenu {
+    padding-right: 28px !important;
+}
+.ui-selectonemenu .ui-selectonemenu-trigger {
+    border: none !important;
+    background: transparent !important;
+    width: 24px !important;
+}
+
+/* Buttons (Standard & Toolbar Buttons) */
+.ui-button {
+    background: #2563eb !important;
+    border: 1px solid #2563eb !important;
+    color: #ffffff !important;
+    padding: 6px 12px !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    text-shadow: none !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.15s ease-in-out !important;
+    min-width: 0 !important;
+    text-align: center !important;
+}
+
+.ui-button:hover {
+    background: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+    color: #ffffff !important;
+}
+
+.ui-button:active {
+    background: #1e40af !important;
+    border-color: #1e40af !important;
+}
+
+/* Gray Neutral Buttons (Secondary Actions like Cancel, Reset, Clear) */
+.ui-button[id*="reset"],
+.ui-button[id*="cancel"],
+.ui-button[id*="clear"],
+.ui-button[id*="close"],
+.ui-button[icon="ui-icon-close"],
+.ui-button[icon="ui-icon-trash"],
+.ui-button[icon="ui-icon-arrowreturnthick-1-w"],
+.ui-confirmdialog-no {
+    background: #f3f4f6 !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+}
+
+/* Icon-only Buttons (Plus, Edit, Trash, Note in tables and toolbar) */
+.ui-button-icon-only {
+    min-width: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    border-radius: 6px !important;
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+.ui-button-icon-only .ui-icon {
+    left: 50% !important;
+    margin-left: -8px !important;
+    top: 50% !important;
+    margin-top: -8px !important;
+    position: absolute !important;
+    display: block !important;
+}
+
+/* Hide literal "ui-button" text inside icon-only buttons */
+.ui-button-icon-only .ui-button-text {
+    display: block !important;
+    text-indent: -99999px !important;
+    overflow: hidden !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.ui-button[id*="reset"]:hover,
+.ui-button[id*="cancel"]:hover,
+.ui-button[id*="clear"]:hover,
+.ui-button[id*="close"]:hover,
+.ui-button[icon="ui-icon-close"]:hover,
+.ui-button[icon="ui-icon-trash"]:hover,
+.ui-button[icon="ui-icon-arrowreturnthick-1-w"]:hover,
+.ui-confirmdialog-no:hover {
+    background: #e5e7eb !important;
+    border-color: #cbd5e1 !important;
+    color: #111827 !important;
+}
+
+/* Footer/action buttons inside panel footers or dialog footers */
+.ui-panel-footer .ui-button,
+.ui-dialog-buttonpane .ui-button {
+    min-width: 120px !important;
+}
+
+.ui-panel-footer .ui-button-icon-only,
+.ui-dialog-buttonpane .ui-button-icon-only {
+    min-width: 0 !important;
+}
+
+/* Toolbar buttons: compact, no wrap */
+.ui-toolbar .ui-button {
+    white-space: nowrap !important;
+    padding: 5px 10px !important;
+    font-size: 12px !important;
+    min-width: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.ui-toolbar .ui-button-icon-only {
+    padding: 0 !important;
+    width: 28px !important;
+    height: 28px !important;
+    flex-shrink: 0 !important;
+}
+
+
+/* Panels (Main Containers) */
+.ui-panel {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    margin-bottom: 24px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.ui-panel .ui-panel-titlebar {
+    background: #f9fafb !important;
+    border: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    color: #111827 !important;
+    padding: 16px 20px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+}
+
+.ui-panel .ui-panel-content {
+    padding: 20px !important;
+    border: none !important;
+    background: #ffffff !important;
+}
+
+.ui-panel .ui-panel-footer {
+    background: #f9fafb !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding: 12px 20px !important;
+}
+
+/* Data Tables */
+.ui-datatable {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+    width: 100% !important;
+}
+
+.ui-datatable table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+}
+
+.ui-datatable th {
+    background: #f8fafc !important;
+    border: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-right: 1px solid #f1f5f9 !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 10px !important;
+    letter-spacing: 0.04em !important;
+    padding: 8px 8px !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+}
+
+.ui-datatable td {
+    padding: 7px 8px !important;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    border-right: 1px solid #f8f9fa !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+}
+
+.ui-datatable tr.ui-widget-content:hover td {
+    background: #f0f7ff !important;
+}
+
+.ui-datatable tr.ui-datatable-even td {
+    background: #ffffff !important;
+}
+
+.ui-datatable tr.ui-datatable-odd td {
+    background: #fafbfc !important;
+}
+
+/* Filter inputs inside table headers */
+.ui-datatable th .ui-inputfield,
+.ui-datatable th .ui-inputtext {
+    padding: 3px 6px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+/* Calendar filter input in header — match other filter inputs */
+.ui-datatable th .ui-calendar {
+    display: inline-block !important;
+}
+.ui-datatable th .ui-calendar input {
+    padding: 3px 5px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    width: 68px !important;
+    border: 1px solid #d1d5db !important;
+    background: #fff !important;
+    color: #1f2937 !important;
+}
+
+/* Column header sort label */
+.ui-datatable th .ui-column-title {
+    display: block !important;
+    margin-bottom: 3px !important;
+    font-size: 10px !important;
+}
+
+/* Paginators */
+.ui-paginator {
+    background: #ffffff !important;
+    border: none !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding: 10px 16px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.ui-paginator-page, 
+.ui-paginator-next, 
+.ui-paginator-prev, 
+.ui-paginator-first, 
+.ui-paginator-last {
+    border: 1px solid #d1d5db !important;
+    background: #ffffff !important;
+    color: #374151 !important;
+    border-radius: 6px !important;
+    padding: 5px 10px !important;
+    height: auto !important;
+    min-width: 28px !important;
+    box-sizing: border-box !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease !important;
+}
+
+.ui-paginator-page:hover, 
+.ui-paginator-next:hover, 
+.ui-paginator-prev:hover, 
+.ui-paginator-first:hover, 
+.ui-paginator-last:hover {
+    background: #f3f4f6 !important;
+    border-color: #cbd5e1 !important;
+    color: #111827 !important;
+}
+
+.ui-paginator-page.ui-state-active {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+/* Dialogs */
+.ui-dialog {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.ui-dialog .ui-dialog-titlebar {
+    background: #f9fafb !important;
+    color: #111827 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 16px 20px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+.ui-dialog .ui-dialog-content {
+    background: #ffffff !important;
+    padding: 20px !important;
+}
+
+.ui-dialog .ui-dialog-buttonpane {
+    background: #f9fafb !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding: 12px 20px !important;
+    margin: 0 !important;
+}
+
+/* Calendar styling override */
+.ui-datepicker {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    padding: 8px !important;
+}
+
+.ui-datepicker header {
+    background: transparent !important;
+    border: none !important;
+    padding: 6px 0 !important;
+}
+
+/* Message bars */
+.ui-messages-info, .ui-messages-warn, .ui-messages-error, .ui-messages-fatal {
+    border-radius: 6px !important;
+    border: 1px solid !important;
+    padding: 10px 15px !important;
+    margin-bottom: 16px !important;
+}
+
+.ui-messages-info {
+    background-color: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #1e40af !important;
+}
+
+.ui-messages-error {
+    background-color: #fef2f2 !important;
+    border-color: #fca5a5 !important;
+    color: #991b1b !important;
+}
+
+/* Growl notifications */
+.ui-growl-item-container {
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    opacity: 0.98 !important;
+}
+
+.ui-growl-title {
+    font-weight: 600 !important;
+    color: #111827 !important;
+}
+
+.ui-growl-message p {
+    color: #4b5563 !important;
+}
+
+/* Remove borders and background from PrimeFaces PanelGrids */
+.ui-panelgrid,
+.ui-panelgrid td,
+.ui-panelgrid tr,
+.ui-panelgrid-cell,
+.ui-panelgrid tbody,
+.ui-panelgrid tbody td {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Scrollable Footer Styles */
+.footer-scroll-container {
+    height: 38px !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+}
+
+.footer-scroll-container::-webkit-scrollbar {
+    width: 4px;
+}
+.footer-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.footer-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 2px;
+}
+.footer-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+#dev-signature {
+    font-size: 11px !important;
+    color: #9CA3AF !important;
+    font-weight: normal !important;
+    cursor: default !important;
+    user-select: none !important;
+}
+
+.ui-layout-south .ui-layout-unit-content {
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #F8F8F8 !important;
+}

@@ -1,0 +1,131 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:snt="http://java.sun.com/jsf/composite/snt"
+                template="/WEB-INF/templates/auth_template.xhtml">
+    <ui:define name="content">
+        <f:event type="preRenderView" listener="#{pdfBean1.init}"/>
+        <h:form id="form" rendered="#{!sessionData.admin}">
+            <p:blockUI block="page" widgetVar="blockPage">
+                LOADING<br />  
+                <p:graphicImage value="/resources/images/ajax-loader.gif"/>  
+            </p:blockUI>
+            <h:panelGroup id="page">
+                <p:panel id="searchPanel">
+                    <h:panelGrid columns="5" columnClasses="column_right_bold, column_right, column_right_bold, column_right">
+                        <h:outputText value="#{msgs.month}"/>
+                        <p:inputText id="month" value="#{pdfBean1.filter.month}" size="10" style="text-align: right"
+                                     validator="yearMonthValidator">
+                            <p:ajax process="@this" update="@this"/>
+                        </p:inputText>
+                        <p:watermark for="month" value="mm.yyyy" />  
+                         <span class="ui-icon ui-icon-info ui-corner-all ui-state-default"></span>
+                    <h:outputText value="#{msgs.pdf_report1_month_desc}"/>
+                    </h:panelGrid>
+                    <f:facet name="footer">
+                        <p:commandButton icon="ui-icon-search" title="#{msgs.search}" 
+                                         action="#{pdfBean1.search()}" 
+                                         update="resultsPanel" process="searchPanel"
+                                         onstart="blockPage.show()" oncomplete="blockPage.hide()"/>
+                        <p:commandButton icon="ui-icon-close" title="#{msgs.cancel}" 
+                                         action="#{pdfBean1.cancel()}" 
+                                         immediate="true" update="@form"
+                                         onstart="blockPage.show()" oncomplete="blockPage.hide()">
+                            <p:resetInput target="searchPanel"/>
+                        </p:commandButton>
+                    </f:facet>
+                </p:panel>
+                <p:panel id="resultsPanel" header="#{msgs.report1_title} #{pdfBean1.filter.month}">
+                    <p:dataTable var="w" value="#{pdfBean1.data}" rowKey="#{w.wi.id}" 
+                                 paginator="true" rows="10"  paginatorPosition="bottom"
+                                 id="wTable" widgetVar="wTable" emptyMessage="#{msgs.no_records_found}" 
+                                 paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport} "
+                                 currentPageReportTemplate="#{msgs.records_no} {totalRecords}">  
+                        <f:facet name="header">
+                            <snt:pdf id="pdfAction" value="#{pdfBean1.pdf}" disabled="#{pdfBean1.data == null or pdfBean1.data.size() == 0}"/>
+                        </f:facet>
+                        <p:column headerText="#{msgs.registrationDate}">  
+                            <snt:outputDate value="#{w.wi.registrationDate}"/>
+                        </p:column>  
+                        <p:column headerText="#{msgs.officeCode}">  
+                            <h:outputText value="#{w.wi.officeCode}" title="#{w.wi.officeName} "/>
+                        </p:column>  
+                        <p:column headerText="#{msgs.registerNumber}">  
+                            #{w.wi.registerNumberDisplay} 
+                        </p:column>  
+                        <p:column headerText="#{msgs.sadItemNbr}">  
+                            #{w.wi.sadItemNbr} 
+                        </p:column>  
+                        <p:column headerText="#{msgs.tariff}">  
+                            #{w.wi.tariff}  
+                        </p:column>  
+                        <p:column headerText="#{msgs.whsCode}">  
+                            #{w.wi.whsCode}  
+                        </p:column>  
+                        <p:column headerText="#{msgs.tscCode}">  
+                            #{w.wi.tscCode}  
+                        </p:column>  
+                        <p:column headerText="#{msgs.countryOfOrigin}">  
+                            #{w.wi.countryOfOrigin}  
+                        </p:column> 
+                        <p:column headerText="#{msgs.cefta}">  
+                            #{w.wi.tarPrf}  
+                        </p:column> 
+                        <p:column headerText="#{msgs.goodsDescription}">  
+                            #{w.wi.goodsDescription}
+                        </p:column> 
+                        <p:column headerText="#{msgs.registeredExitNWGT}" style="text-align: right">  
+                            <snt:outputDecimal value="#{w.remainingNetWeight}"/>
+                        </p:column>  
+                        <p:column headerText="#{msgs.undeclaredNWGT}" style="text-align: right">  
+                            <snt:outputDecimal value="#{w.notWrittenOffNetWeight}"/>
+                        </p:column>  
+                        <p:column headerText="#{msgs.registeredExitQTY}" style="text-align: right">  
+                            <snt:outputDecimal value="#{w.remainingQuantity}"/>
+                        </p:column>  
+                        <p:column headerText="#{msgs.undeclaredQTY}" style="text-align: right">  
+                            <snt:outputDecimal value="#{w.notWrittenOffQuantity}"/>
+                        </p:column>  
+                        <p:column headerText="#{msgs.measurementUnit}" style="text-align: right">  
+                            #{w.wi.measurementUnit}  
+                        </p:column>  
+                    </p:dataTable>  
+                </p:panel>
+            </h:panelGroup>
+        </h:form>
+    </ui:define>
+    <ui:define name="helpContent">
+        <p:panel header="PDF Report help">
+
+            <p:panelGrid styleClass="no_border_grid">
+
+                <p:row>
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.pdf_help_global}"/>
+                    </p:column>
+                </p:row>
+                <p:row>
+                    <p:column>
+                        <span class="ui-icon ui-icon-search ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.pdf_help_report1_search}"/>
+                    </p:column>
+                </p:row>
+                <p:row>
+                    <p:column>
+                        <span class="ui-icon ui-icon-close ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.daily_exits_help_5}"/>
+                    </p:column>
+                </p:row>
+            </p:panelGrid>
+
+            <!-- Common actions -->
+            <ui:include src="help.xhtml"/> 
+        </p:panel>
+    </ui:define>
+</ui:composition>

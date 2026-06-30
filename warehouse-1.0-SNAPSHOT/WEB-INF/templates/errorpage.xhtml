@@ -1,0 +1,24 @@
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+                xmlns:of="http://omnifaces.org/functions"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:snt="http://java.sun.com/jsf/composite/snt">
+    <ui:define name="title">#{msgs.error}</ui:define>
+    <ui:define name="headerTitle">
+        <snt:headerTitle value="#{msgs.error}"/>
+    </ui:define>
+   
+    <ui:define name="content">
+        
+        <div class="ui-breadcrumb ui-module ui-widget ui-widget-header ui-helper-clearfix ui-corner-all">
+            <a href="#{request.contextPath}/home">
+                <span class="ui-button-icon-left ui-icon ui-c ui-icon-home"></span>
+            </a>
+        </div>
+        
+        <ui:insert name="errorContent"/>
+    </ui:define>
+</ui:composition>

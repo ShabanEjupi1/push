@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+    <!-- INTERFACE -->
+    <cc:interface>
+        <cc:attribute name="value"/>
+        <cc:attribute name="label"/>
+        <cc:attribute name="id"/>
+        <cc:attribute name="disabled" type="java.lang.Boolean" default="false"/>
+        <cc:attribute name="onChange" method-signature="void test()"/>
+        <cc:attribute name="render" default="@this"/>
+    </cc:interface>
+
+    <!-- IMPLEMENTATION -->
+    <cc:implementation>
+        <p:inputText id="#{cc.attrs.id}" value="#{cc.attrs.value}" size="10" style="text-align: right"
+                     label="#{cc.attrs.label}" disabled="#{cc.attrs.disabled}">
+            <f:convertNumber minFractionDigits="2" maxFractionDigits="2" groupingUsed="true" locale="en"/>
+            <f:validator validatorId="positiveDecimalValidator"/>
+            <f:ajax execute="@this" render="#{cc.attrs.render}" listener="#{cc.attrs.onChange}"/>
+        </p:inputText>
+    </cc:implementation>
+</html>

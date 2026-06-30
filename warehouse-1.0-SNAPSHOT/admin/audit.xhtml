@@ -1,0 +1,169 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/auth_template.xhtml"
+                xmlns:snt="http://java.sun.com/jsf/composite/snt">
+    <ui:define name="title">#{msgs.audit_log}</ui:define>
+    <ui:define name="headerTitle">
+        <snt:headerTitle value="#{msgs.audit_log}"/>
+    </ui:define>
+    <ui:define name="content">
+        <f:event type="preRenderView" listener="#{alBean.init}"/>
+        <p:panel header="#{msgs.audit_log}">
+            <h:form id="form">
+                <p:blockUI block="form:results" trigger="form:results">  
+                    LOADING<br />  
+                    <p:graphicImage value="/resources/images/ajax-loader.gif"/>  
+                </p:blockUI>
+                <p:panel id="searchPanel">
+                    <h:panelGrid columns="6" columnClasses="column_right_bold, column_left, column_right_bold, column_left, column_right_bold, column_left, column_right_bold, column_right_bold, column_right_bold, column_left" >
+                        <h:outputText value="#{msgs.entityType}"/>
+                        <p:selectOneMenu value="#{alBean.filter.entityType}" style="width: 105px"
+                                         converter="omnifaces.GenericEnumConverter">
+                            <f:selectItem itemValue="#{null}" itemLabel=""/>
+                            <f:selectItems value="#{alBean.entityTypes}" var="t" itemValue="#{t}" itemLabel="#{msgs[t]}"/>
+                        </p:selectOneMenu>
+                        <h:outputText value="#{msgs.eventAt}"/>
+                        <h:panelGroup>
+                            <snt:calendar value="#{alBean.filter.dateFrom}" label="#{msgs.eventAt}"/>
+                            <p:spacer width="5"/>
+                            <h:outputText value="-"/>
+                            <p:spacer width="5"/>
+                            <snt:calendar value="#{alBean.filter.dateTo}" label="#{msgs.eventAt}"/>
+                        </h:panelGroup>
+                        <h:outputText value="#{msgs.actionType}"/>
+                        <p:selectOneMenu value="#{alBean.filter.actionType}" style="width: 105px"
+                                         converter="omnifaces.GenericEnumConverter">
+                            <f:selectItem itemValue="#{null}" itemLabel=""/>
+                            <f:selectItems value="#{alBean.actionTypes}" var="at" itemValue="#{at}" itemLabel="#{msgs[at]}"/>
+                        </p:selectOneMenu>
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="4">
+                        <h:outputText value="#{msgs.traderFiscalNumber}" styleClass="column_right_bold" />
+                        <p:autoComplete value="#{alBean.trader}"
+                                        completeMethod="#{alBean.completeTrader}"  
+                                        var="t" itemLabel="#{t.fiscalNumber}" itemValue="#{t}" 
+                                        converter="traderConverter" size="10"
+                                        forceSelection="true" dropdown="true" minQueryLength="3">  
+                            <p:ajax event="itemSelect" listener="#{alBean.onSelectTrader}" 
+                                    update="traderPanel" process="@this"/>  
+                            <p:column width="30">#{t.fiscalNumber}</p:column> 
+                            <p:column width="150">#{t.name}</p:column>
+                        </p:autoComplete>  
+                        <h:outputText/>
+                        <h:panelGroup id="traderPanel">
+                            <p:inputText value="#{alBean.trader.display}" disabled="true" size="100"/>
+                        </h:panelGroup>
+                    </h:panelGrid>
+
+                    <f:facet name="footer">
+                        <h:panelGrid columns="3">
+                            <p:commandButton icon="ui-icon-search" 
+                                             process="@form" update="@form"
+                                             oncomplete="resultsTable.getPaginator().setPage(0);"/>
+                            <p:commandButton icon="ui-icon-close" action="#{alBean.cancel()}" 
+                                             process="@form" update="@form"   
+                                             oncomplete="resultsTable.getPaginator().setPage(0);">
+                                <p:resetInput target="searchPanel" />
+                            </p:commandButton>
+                            <snt:ajaxStatus/>
+                        </h:panelGrid>
+                    </f:facet>
+                </p:panel>
+                <p:panel id="resultsPanel">
+                    <p:dataTable value="#{alBean.data}" var="log" rows="10" id="results"
+                                 lazy="true" sortBy="#{log.eventAt}" sortOrder="descending"
+                                 emptyMessage="#{msgs.no_records_found}" widgetVar="resultsTable"
+                                 paginator="true" paginatorPosition="bottom"
+                                 rowKey="#{log.id}"
+                                 paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport} "
+                                 currentPageReportTemplate="#{msgs.records_no} {totalRecords}">
+                        <f:facet name="header">#{msgs.audit_log}</f:facet>
+                        <p:column headerText="#{msgs.actionType}"
+                                  style="text-align: left"
+                                  width="10%"
+                                  sortBy="#{log.actionType}">
+                            <h:outputText value="#{msgs[log.actionType]}" />
+                        </p:column>
+                        <p:column headerText="#{msgs.entityType}"
+                                  style="text-align: left"
+                                  width="10%"
+                                  sortBy="#{log.entityType}">
+                            <h:outputText value="#{msgs[log.entityType]}" />
+                        </p:column>
+                        <p:column headerText="#{msgs.eventAt}"
+                                  style="text-align: right"
+                                  width="10%"
+                                  sortBy="#{log.eventAt}">
+                            <snt:outputDate value="#{log.eventAt}" showTime="true"/>
+                        </p:column>
+                        <p:column headerText="#{msgs.user}" width="10%"
+                                  style="text-align: left;white-space: normal;"
+                                  sortBy="#{log.eventBy}">
+                            <h:outputText value="#{log.eventBy}"/>
+                        </p:column>
+                        <p:column width="40%" headerText="#{msgs.al_details}" >  
+                            <p:rowToggler />  
+                        </p:column>  
+                        <p:rowExpansion>  
+                            <p:dataTable value="#{log.auditEntries}" var="entry"
+                                         paginator="false">
+                                <p:column headerText="#{msgs.field}" width="15%"
+                                          style="text-align: left; white-space: normal">
+                                    <h:outputText value="#{msgs[entry.field]}"/>
+                                </p:column>
+                                <p:column headerText="#{msgs.oldValue}" width="35%"
+                                          style="text-align: left; white-space: normal">
+                                    <h:outputText value="#{entry.oldValue}" />
+                                </p:column>
+                                <p:column headerText="#{msgs.newValue}" width="35%"
+                                          style="text-align: left; white-space: normal">
+                                    <h:outputText value="#{entry.newValue}" />
+                                </p:column>
+                            </p:dataTable>
+                        </p:rowExpansion>
+                    </p:dataTable>
+                </p:panel>
+            </h:form>
+        </p:panel>
+    </ui:define>
+    <!-- Help Panel -->
+    <ui:define name="helpContent">
+        <p:panel header="#{msgs.home_help_header}">
+
+            <p:panelGrid styleClass="no_border_grid">
+
+                <p:row>
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.audit_log_help_global}"/>
+                    </p:column>
+                </p:row>
+
+                <p:row>
+                    <p:column>
+                        <span class="ui-icon ui-icon-search ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.daily_exits_help_4}"/>
+                    </p:column>
+                </p:row>
+                <p:row>
+                    <p:column>
+                        <span class="ui-icon ui-icon-close ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.daily_exits_help_5}"/>
+                    </p:column>
+                </p:row>
+
+            </p:panelGrid>
+
+            <!-- Common actions -->
+            <ui:include src="../help.xhtml"/>            
+
+        </p:panel>
+    </ui:define>
+</ui:composition>

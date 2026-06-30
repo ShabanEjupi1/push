@@ -1,0 +1,45 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/template.xhtml">
+
+    <ui:define name="content">
+
+        <h:form id="loginForm">
+            <p:focus for="username"/>
+            <h:panelGroup styleClass="error" rendered="#{not facesContext.validationFailed}">
+                #{shiroLoginFailure}
+            </h:panelGroup>
+
+
+            <p:panel header="#{msgs.login}" styleClass="login_panel">
+                <h:panelGrid columns="2" columnClasses="column_right, column_left"
+                             cellpadding="3">
+                    <h:outputLabel value="#{msgs.login_username} *" for="username"/>
+                    <p:inputText value="#{login.username}" id="username"
+                                 label="#{msgs.login_username}" autocomplete="off"
+                                 required="true"/>
+                    <h:outputLabel value="#{msgs.login_password} *" for="password"/>
+                    <p:password value="#{login.password}" id="password"
+                                label="#{msgs.login_password}"
+                                required="true"/>
+                </h:panelGrid>
+                <div style="display: flex; justify-content: center; gap: 12px; margin-top: 20px;">
+                    <p:commandButton value="#{msgs.login}" label="#{msgs.login}"
+                                     action="#{login.submit()}" id="loginBtn"
+                                     style="min-width: 100px;"/>
+                    <p:commandButton value="#{msgs.login_reset}"
+                                     label="#{msgs.login_reset}" immediate="true"
+                                     update="loginForm"
+                                     style="min-width: 100px;"
+                                     oncomplete="$(PrimeFaces.escapeClientId('loginForm:username')).focus();"/>
+                </div>
+            </p:panel>
+
+        </h:form>
+
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Main Body and General Reset */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    background-color: #f3f4f6 !important;
+    color: #1f2937;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Typography elements */
+.ui-widget, .ui-widget .ui-widget {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Header Styling */
+.ui-layout-north {
+    background: #ffffff !important;
+    border: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    z-index: 1000 !important;
+    overflow: visible !important;
+}
+
+.ui-layout-north .ui-layout-unit-content {
+    background: #ffffff !important;
+    overflow: visible !important;
+    padding: 0 20px !important;
+}
+
+#top_wrapper {
+    background-image: none !important;
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+}
+
+#mainMenuPanel {
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Header table layout */
+#mainMenuPanel > table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: none !important;
+    margin-top: 8px !important;
+}
+
+#mainMenuPanel > table > tbody > tr > td {
+    vertical-align: middle !important;
+    border: none !important;
+    padding: 0 4px !important;
+}
+
+#mainMenuPanel > table > tbody > tr > td:nth-child(1) {
+    width: 80px !important;
+    text-align: left !important;
+}
+
+#mainMenuPanel > table > tbody > tr > td:nth-child(2) {
+    width: 80px !important;
+    text-align: left !important;
+}
+
+#mainMenuPanel > table > tbody > tr > td:nth-child(3) {
+    width: 100% !important;
+}
+
+/* Logo images */
+#mainMenuPanel img {
+    height: 56px !important;
+    width: auto !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+/* Header panel containing toolbar and user info */
+.ui-layout-north .template_header_panel {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+    background: transparent !important;
+    display: table !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+.template_header_panel td {
+    border: none !important;
+    padding: 2px 0 !important;
+    background: transparent !important;
+}
+
+/* Navigation Menu and Toolbar Wrapper */
+#toolbarForm {
+    margin: 0 !important;
+}
+
+/* User display text styling */
+.user_logged_in {
+    text-align: right;
+    font-weight: 600 !important;
+    color: #2563eb !important;
+    font-size: 13px !important;
+    letter-spacing: -0.01em;
+}
+
+/* Login Panel Styling (Modern Sleek Card) */
+.login_panel {
+    display: block;
+    position: absolute;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 420px !important;
+    height: auto !important;
+    background: #ffffff !important;
+    border: 1px solid #f3f4f6 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    padding: 30px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.login_panel .ui-panel-titlebar {
+    background: transparent !important;
+    border: none !important;
+    color: #111827 !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    padding: 0 0 20px 0 !important;
+}
+
+.login_panel .ui-panel-content {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.login_panel table {
+    width: 100% !important;
+}
+
+.login_panel td {
+    padding: 8px 0 !important;
+}
+
+.login_panel input[type="text"], .login_panel input[type="password"] {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Grid & Layout Units */
+.ui-layout-center {
+    background-color: #f3f4f6 !important;
+    border: none !important;
+}
+
+.ui-layout-center .ui-layout-unit-content {
+    background-color: #f3f4f6 !important;
+    padding: 24px !important;
+}
+
+/* Common CSS classes */
+.column_right {
+    text-align: right;
+}
+
+.column_right_bold {
+    text-align: right;
+    font-weight: bold;
+}
+
+.column_left {
+    text-align: left;
+}
+
+.column_center {
+    text-align: center;
+    height: 100%;
+}
+
+.no_border_grid {
+    border: none !important;
+}
+
+.no_border_grid td {
+    border: none !important;
+}
+
+.no_border_grid tr {
+    border: none !important;
+}
+
+/* Footer layout */
+.footer {
+    text-align: center;
+    background: #F8F8F8;
+    height: 100%;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* DataTable highlights */
+.whs_table_true {
+    color: #2563eb !important;
+    font-weight: 500;
+}
+
+.whs_table_false {
+    color: #4b5563 !important;
+}
+
+.warehouse_exit_VALID {
+    background-color: #ffffff !important;
+}
+
+.warehouse_exit_STORNED {
+    color: #ef4444 !important;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

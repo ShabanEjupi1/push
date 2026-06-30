@@ -1,0 +1,38 @@
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="mainMenu">
+        <p:toolbar>
+
+            <p:toolbarGroup align="left" > 
+                <p:commandButton icon="ui-icon-gear" value="#{msgs.users}" action="#{navigation.users()}"
+                                 rendered="#{sessionData.admin}"/>  
+                <p:commandButton icon="ui-icon-gear" value="#{msgs.audit_log}" action="#{navigation.auditLog()}"
+                                 rendered="#{sessionData.admin}"/>  
+            </p:toolbarGroup>
+            <p:toolbarGroup align="right" > 
+
+                <p:commandButton icon="ui-icon-gear" value="#{msgs.exits_btn}" title="#{msgs.daily_exits}" action="#{navigation.daily_exits()}"
+                                 rendered="#{!sessionData.admin}"/>
+                <p:commandButton icon="ui-icon-circle-close" title="#{msgs.storn_exits}" action="#{navigation.storn_daily_exits()}"
+                                 rendered="#{sessionData.admin}"/>
+                <p:commandButton icon="ui-icon-transferthick-e-w" title="#{msgs.relink}" action="#{navigation.relink()}"
+                                 rendered="#{sessionData.admin}"/>
+<!--                <p:commandButton icon="ui-icon-gear" value="#{msgs.pdf}" action="#{navigation.pdfReport()}"
+                                 rendered="#{!sessionData.admin}"/>  -->
+                <p:commandButton icon="ui-icon-gear" value="#{msgs.pdf}" action="#{navigation.pdfReport()}"
+                                 rendered="#{!sessionData.admin}"/>  
+                <p:commandButton icon="ui-icon-document" value="Excel" action="#{navigation.excelReport()}"/>
+                <p:commandButton icon="ui-icon-help" title="#{msgs.help}" id="helpBtn" oncomplete="helpDlg.show();"/>  
+                <p:commandButton icon="ui-icon-person" oncomplete="userDlg.show();" action="#{userProfileBean.init()}" update=":userProfileForm" title="#{msgs.userProfile}"/>  
+                <p:commandButton icon="ui-icon-home" action="#{navigation.home()}" title="#{msgs.home}"/>  
+                <p:commandButton title="#{msgs.logout}" icon="ui-icon-power" 
+                                 action="#{logout.submit}" ajax="false"/>  
+            </p:toolbarGroup>  
+        </p:toolbar>
+    </ui:define>
+</ui:composition>

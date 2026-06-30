@@ -1,0 +1,528 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/templates/auth_template.xhtml"
+                xmlns:snt="http://java.sun.com/jsf/composite/snt">
+    <ui:define name="content">
+        <f:event type="preRenderView" listener="#{homeBean.init()}" rendered="#{!sessionData.admin}"/>
+        <h:form id="form" rendered="#{!sessionData.admin}">
+            <p:panel header="#{msgs.warehouseInventory}">
+                <f:facet name="actions">
+                    <p:commandLink title="#{msgs.clearFilters}" 
+                                   styleClass="ui-panel-titlebar-icon ui-corner-all ui-state-default"
+                                   oncomplete="wTable.clearFilters();"
+                                   action="#{homeBean.clearRegistrationDate}"
+                                   update="@form">
+                        <h:outputText styleClass="ui-icon ui-icon-close" />  
+                    </p:commandLink>
+                </f:facet>  
+                <p:dataTable var="w" value="#{homeBean.data}" rowKey="#{w.wi.id}" lazy="true"
+                             paginator="true" rows="5"  paginatorPosition="bottom"
+                             id="wTable" widgetVar="wTable" 
+                             paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport} "
+                             currentPageReportTemplate="#{msgs.records_no} {totalRecords}"
+                             rowStyleClass="whs_table_#{homeBean.hasTodaysExits(w)}">  
+                    <p:ajax event="filter" update="@all" />
+                    <p:column  sortBy="registrationDate" id="regDateColumn">  
+                        <f:facet name="header">
+                            #{msgs.registrationDate}
+
+                            <div style="width:110px; overflow: hidden;">
+                                <div style="width:80px;float:left">
+                                    <p:calendar value="#{homeBean.filter.registrationDate}"
+                                                pattern="#{datePattern}" readonlyInput="true"
+                                                timeZone="#{timezone}" size="10"
+                                                navigator="true" id="regDateFilter">
+                                        <p:ajax event="dateSelect" listener="#{homeBean.filterRegistrationDate}" update="wTable"
+                                                onstart="wTable.getPaginator().setPage(0);" />
+                                    </p:calendar>
+                                </div>
+                                <div>
+                                    <p:commandButton icon="ui-icon-close" title="#{msgs.clearRegistrationDate}"
+                                                     action="#{homeBean.clearRegistrationDate}" update="wTable"
+                                                     style="width: 20px; height: 20px"/>
+                                </div>
+                            </div>
+                        </f:facet>
+                        <snt:outputDate value="#{w.wi.registrationDate}"/>
+                    </p:column>  
+                    <p:column headerText="#{msgs.officeCode}" sortBy="officeCode" filterBy="officeCode" filterStyle="width: 30px" id="officeCodeColumn">  
+                        <h:outputText value="#{w.wi.officeCode}" title="#{w.wi.officeName} "/>
+                    </p:column>  
+                    <p:column headerText="#{msgs.registerNumber}" sortBy="registerNumber" filterBy="registerNumber" filterStyle="width: 50px" id="regNoColumn">  
+                        #{w.wi.registerNumberDisplay} 
+                    </p:column>  
+                    <p:column headerText="#{msgs.sadItemNbr}" sortBy="sadItemNbr" filterBy="sadItemNbr" filterStyle="width: 50px" id="itseqnoColumn">  
+                        #{w.wi.sadItemNbr} 
+                    </p:column>  
+                    <p:column headerText="#{msgs.tariff}" sortBy="tariff" filterBy="tariff" filterStyle="width: 50px" id="tariffColumn">  
+                        #{w.wi.tariff}  
+                    </p:column>  
+                    <p:column headerText="#{msgs.tscCode}" sortBy="tscCode" filterBy="tscCode" filterStyle="width: 20px" id="tscCodeColumn">  
+                        #{w.wi.tscCode}  
+                    </p:column>  
+                    <p:column headerText="#{msgs.countryOfOrigin}" sortBy="countryOfOrigin" filterBy="countryOfOrigin"  filterStyle="width: 35px" id="originColumn">  
+                        #{w.wi.countryOfOrigin}  
+                    </p:column> 
+                    <p:column headerText="#{msgs.cefta}" sortBy="tarPrf" filterBy="tarPrf"  filterStyle="width: 30px" id="tarPrfColumn">  
+                        #{w.wi.tarPrf}  
+                    </p:column> 
+                    <p:column headerText="#{msgs.goodsDescription}" sortBy="goodsDescription" filterBy="goodsDescription" id="goodsDescColumn">  
+                        <p:commandButton id="details" icon="ui-icon-note" disabled="true"
+                                         style="width: 20px; height: 20px"/>
+                        <p:overlayPanel for="details" showEffect="blind"  showEvent="mouseover" hideEvent="mouseout"  
+                                        showCloseIcon="true">  
+                            #{w.wi.goodsDescription}
+                        </p:overlayPanel>  
+                    </p:column> 
+                    <p:column headerText="#{msgs.inputNetWeight}" sortBy="inputNetWeight" style="text-align: right" id="inetColumn">  
+                        <snt:outputDecimal value="#{w.wi.inputNetWeight}"/>
+                    </p:column>  
+                    <p:column headerText="#{msgs.remainingNetWeight}" sortBy="remainingNetWeight" style="text-align: right" id="rnetColumn">  
+                        <snt:outputDecimal value="#{w.remainingNetWeight}"/>
+                    </p:column>  
+                    <p:column headerText="#{msgs.inputGrossWeight}" sortBy="inputGrossWeight" style="text-align: right" id="igrossColumn">  
+                        <snt:outputDecimal value="#{w.wi.inputGrossWeight}"/>
+                    </p:column>  
+                    <p:column headerText="#{msgs.inputQuantity}" sortBy="inputQuantity" style="text-align: right" id="iqtyColumn">  
+                        <snt:outputDecimal value="#{w.inputQuantity}"/>
+                    </p:column>  
+                    <p:column headerText="#{msgs.remainingQuantity}" sortBy="remainingQuantity" style="text-align: right" id="rqtyColumn">  
+                        <snt:outputDecimal value="#{w.remainingQuantity}"/>
+                    </p:column>  
+                    <p:column headerText="#{msgs.measurementUnit}" sortBy="measurementUnit" style="text-align: right" id="muColumn">  
+                        #{w.wi.measurementUnit}  
+                    </p:column>  
+                    <p:column headerText="#{msgs.customsValue}" sortBy="customsValue" 
+                              style="text-align: right" id="valueColumn"> 
+                        <snt:outputDecimal value="#{w.value}"/>
+                    </p:column>
+                    <p:column>
+                        <p:commandButton icon="ui-icon-plus"
+                                         title="#{msgs.newWarehouseExit}"
+                                         action="#{homeBean.selectItem(w)}"
+                                         update=":exitForm" process="@this"
+                                         oncomplete="exitDlg.show();wTable.clearFilters();"
+                                         disabled="#{!w.exitAllowed}"
+                                         style="width: 20px; height: 20px"
+                                         id="newExitBtn"/>
+                    </p:column>
+                    <p:column>
+                        <p:commandButton icon="ui-icon-newwin"
+                                         action="#{homeBean.loadExits(w)}"
+                                         title="#{msgs.showAllExits}"
+                                         update=":exitsForm" process="@this"
+                                         oncomplete="exitsDlg.show();"
+                                         style="width: 20px; height: 20px"/>
+                    </p:column>
+                </p:dataTable>  
+            </p:panel>
+        </h:form>
+        <h:form id="dailyExitsForm" rendered="#{!sessionData.admin}">
+            <p:panel header="#{msgs.todayWarehouseExits}">
+                <p:dataTable value="#{homeBean.dailyExits}" var="we" rows="10" lazy="true"
+                             paginator="true" paginatorPosition="bottom"
+                             paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport} "
+                             currentPageReportTemplate="#{msgs.records_no} {totalRecords}"
+                             rowStyleClass="warehouse_exit_#{we.status}">
+                    <p:column headerText="#{msgs.exitDate}" style="text-align: right">
+                        <snt:outputDate value="#{we.exitDate}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.registrationDate}" style="text-align: right">
+                        <snt:outputDate value="#{we.warehouseInventory.registrationDate}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.officeCode}" style="text-align: left">
+                        <h:outputText value="#{we.warehouseInventory.officeCode}" title="#{we.warehouseInventory.officeName}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.registerNumber}" style="text-align: left">
+                        <h:outputText value="#{we.warehouseInventory.registerNumberDisplay}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.sadItemNbr}" style="text-align: right">
+                        <h:outputText value="#{we.warehouseInventory.sadItemNbr}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.tariff}" style="text-align: right">
+                        <h:outputText value="#{we.warehouseInventory.tariff}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.tscCode}" style="text-align: right">
+                        <h:outputText value="#{we.warehouseInventory.tscCode}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.countryOfOrigin}" style="text-align: left">
+                        <h:outputText value="#{we.warehouseInventory.countryOfOrigin}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.cefta}" style="text-align: left">
+                        <h:outputText value="#{we.warehouseInventory.tarPrf}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.goodsDescription}" style="text-align: left">
+                        <p:commandButton id="details" icon="ui-icon-note" disabled="true"
+                                         style="width: 20px; height: 20px"/>
+                        <p:overlayPanel for="details" showEffect="blind"  showEvent="mouseover" hideEvent="mouseout"  
+                                        showCloseIcon="true">  
+                            #{we.warehouseInventory.goodsDescription}
+                        </p:overlayPanel>  
+                    </p:column>
+                    <p:column headerText="#{msgs.netWeightOut}" style="text-align: right">
+                        <snt:outputDecimal value="#{we.netWeightOut}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.grossWeightOut}" style="text-align: right">
+                        <snt:outputDecimal value="#{we.grossWeightOut}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.quantityOut}" style="text-align: right">
+                        <snt:outputDecimal value="#{we.quantityOut}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.stockValue}" style="text-align: right">
+                        <snt:outputDecimal value="#{we.stockValue}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.exitReference}" style="text-align: left">
+                        <h:outputText value="#{we.exitReference}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.note}" style="text-align: left;white-space: normal;">
+                        <h:outputText value="#{we.note}"/>
+                    </p:column>
+                    <p:column>
+                        <p:commandButton icon="ui-icon-pencil"
+                                         title="#{msgs.editWarehouseExit}"
+                                         action="#{homeBean.editExit(we)}"
+                                         disabled="#{we.storned}"
+                                         update=":exitForm" process="@this"
+                                         oncomplete="exitDlg.show();wTable.clearFilters();"
+                                         style="width: 20px; height: 20px"/>
+                    </p:column>
+                    <p:column>
+                        <p:commandButton icon="ui-icon-trash"
+                                         title="#{msgs.deleteWarehouseExit}"
+                                         action="#{homeBean.deleteExit(we)}"
+                                         disabled="#{we.storned}"
+                                         update=":form :dailyExitsForm"
+                                         style="width: 20px; height: 20px">
+                            <p:confirm header="#{msgs.deleteWarehouseExitHeader}" message="#{msgs.deleteWarehouseExitDetails}" icon="ui-icon-alert" />  
+                        </p:commandButton>
+                    </p:column>
+                </p:dataTable>
+            </p:panel>
+        </h:form>
+    </ui:define>
+    <ui:define name="otherContent">
+        <p:dialog widgetVar="exitDlg" header="#{msgs.registrationOfExit}" closeOnEscape="false" closable="false"
+                  rendered="#{!sessionData.admin}" modal="true">
+            <h:form id="exitForm" onkeypress="if (event.which == 13)
+                        event.preventDefault();">
+                <p:outputPanel id="detailsPanel" rendered="#{homeBean.selected != null}">
+                    <p:panel>
+                        <p:panelGrid styleClass="no_border_grid">
+                            <p:row>
+                                <p:column>
+                                    <h:outputText value="#{msgs.registerNumber}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{homeBean.warehouseExit.warehouseInventory.registerNumberDisplay}"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.tariff}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{homeBean.warehouseExit.warehouseInventory.tariff}"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.netWeightOut}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <snt:inputDecimal value="#{homeBean.warehouseExit.netWeightOut}"
+                                                      label="#{msgs.netWeightOut}" id="nwgtOut"
+                                                      onChange="#{homeBean.onChangeNetWeightOut()}"
+                                                      render=":exitForm:detailsPanel"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.remainingNetWeight}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column styleClass="column_right">
+                                    <snt:inputDecimal value="#{homeBean.selected.remainingNetWeight}" disabled="true"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.exitReference}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText value="#{homeBean.warehouseExit.exitReference}" maxlength="20" size="30"
+                                                 label="#{msgs.exitReference}" id="exitRef">
+                                        <p:ajax process="@this" update="@this"/>
+                                        <f:validateLength maximum="20"/>
+                                    </p:inputText>
+                                </p:column>
+                            </p:row>
+                            <p:row>
+                                <p:column>
+                                    <h:outputText value="#{msgs.registrationDate}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <snt:outputDate value="#{homeBean.warehouseExit.warehouseInventory.registrationDate}"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.countryOfOrigin}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{homeBean.warehouseExit.warehouseInventory.countryOfOrigin}"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.quantityOut}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <snt:inputDecimal value="#{homeBean.warehouseExit.quantityOut}"
+                                                      label="#{msgs.quantityOut}" id="qtyOut"
+                                                      disabled="#{!homeBean.warehouseExit.quantityEnabled}"
+                                                      onChange="#{homeBean.onChangeQuantityOut()}"
+                                                      render=":exitForm:detailsPanel"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.remainingQuantity}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column styleClass="column_right">
+                                    <snt:inputDecimal value="#{homeBean.selected.remainingQuantity}" disabled="true"/>
+                                </p:column>
+                                <p:column rowspan="2">
+                                    <h:outputText value="#{msgs.note}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column rowspan="2">
+                                    <p:inputTextarea value="#{homeBean.warehouseExit.note}"
+                                                     label="#{msgs.note}" id="noteArea"
+                                                     maxlength="100" rows="3" cols="50" autoResize="false">
+                                        <f:validateLength maximum="100"/>
+                                        <p:ajax process="@this" update="@this"/>
+                                    </p:inputTextarea>
+                                </p:column>
+                            </p:row>
+                            <p:row>
+                                <p:column>
+                                    <h:outputText value="#{msgs.sadItemNbr}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{homeBean.warehouseExit.warehouseInventory.sadItemNbr}"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.officeCode}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{homeBean.warehouseExit.warehouseInventory.officeCode}"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.stockValue}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <snt:inputDecimal value="#{homeBean.warehouseExit.stockValue}"
+                                                      label="#{msgs.stockValue}" id="stockValue"
+                                                      onChange="#{homeBean.onChangeStockValue()}"
+                                                      disabled="true"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.measurementUnit}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <p:inputText value="#{homeBean.warehouseExit.warehouseInventory.measurementUnit}" disabled="true" size="10"/>
+                                </p:column>
+                                <p:column>
+                                </p:column>
+                                <p:column>
+                                </p:column>
+                            </p:row>
+                            <p:row>
+                                 <p:column>
+                                    <h:outputText value="#{msgs.tscCode}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{homeBean.warehouseExit.warehouseInventory.tscCode}"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.officeName}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{homeBean.warehouseExit.warehouseInventory.officeName}"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.grossWeightOut}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <snt:inputDecimal value="#{homeBean.warehouseExit.grossWeightOut}"
+                                                      disabled="true"/>
+                                </p:column>
+                                <p:column>
+                                </p:column>
+                                <p:column>
+                                </p:column>
+                            </p:row>
+                            <p:row>
+                                <p:column>
+                                    <h:outputText value="#{msgs.cefta}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{homeBean.warehouseExit.warehouseInventory.tarPrf}" />
+                                </p:column>
+                                <p:column>
+                                    <h:outputText value="#{msgs.goodsDescription}" style="font-weight: bold;"/>
+                                </p:column>
+                                <p:column colspan="5">
+                                    <h:outputText value="#{homeBean.warehouseExit.warehouseInventory.goodsDescription}"/>
+                                </p:column>
+                                <p:column>
+                                </p:column>
+                                <p:column>
+                                </p:column>
+                            </p:row>
+                        </p:panelGrid>
+                        <f:facet name="footer">
+                            <p:commandButton icon="ui-icon-disk" title="#{msgs.save}" 
+                                             update=":form :dailyExitsForm" 
+                                             value="#{msgs.save}" id="saveExitBtn"
+                                             action="#{homeBean.save}"
+                                             oncomplete="onSave(xhr, status, args)"/>
+                            <p:commandButton icon="ui-icon-close" title="#{msgs.cancel}" 
+                                             update=":form :dailyExitsForm"
+                                             value="#{msgs.cancel}" immediate="true"
+                                             action="#{homeBean.cancel}"
+                                             oncomplete="exitDlg.hide();wTable.clearFilters();">
+                                <p:resetInput target="detailsPanel"/>  
+                            </p:commandButton>
+                        </f:facet>
+                    </p:panel>
+                </p:outputPanel>
+            </h:form>
+        </p:dialog>
+        <p:dialog widgetVar="exitsDlg" header="#{msgs.warehouseExits}" closeOnEscape="true" closable="true"
+                  rendered="#{!sessionData.admin}" modal="true">
+            <h:form id="exitsForm">
+                <p:dataTable value="#{homeBean.exits}" var="we" rows="10"
+                             paginator="true" paginatorPosition="bottom"
+                             paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport} "
+                             currentPageReportTemplate="#{msgs.records_no} {totalRecords}"
+                             lazy="true"
+                             rowStyleClass="warehouse_exit_#{we.status}">
+                    <p:column headerText="#{msgs.exitDate}" style="text-align: right">
+                        <snt:outputDate value="#{we.exitDate}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.registrationDate}" style="text-align: right">
+                        <snt:outputDate value="#{we.warehouseInventory.registrationDate}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.officeCode}" style="text-align: left">
+                        <h:outputText value="#{we.warehouseInventory.officeCode}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.registerNumber}" style="text-align: left">
+                        <h:outputText value="#{we.warehouseInventory.registerNumberDisplay}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.sadItemNbr}" style="text-align: right">
+                        <h:outputText value="#{we.warehouseInventory.sadItemNbr}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.tariff}" style="text-align: right">
+                        <h:outputText value="#{we.warehouseInventory.tariff}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.tscCode}" style="text-align: right">
+                        <h:outputText value="#{we.warehouseInventory.tscCode}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.countryOfOrigin}" style="text-align: left">
+                        <h:outputText value="#{we.warehouseInventory.countryOfOrigin}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.cefta}" style="text-align: left">
+                        <h:outputText value="#{we.warehouseInventory.tarPrf}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.goodsDescription}" style="text-align: left">
+                        <h:outputText value="#{we.warehouseInventory.goodsDescription}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.netWeightOut}" style="text-align: right">
+                        <snt:outputDecimal value="#{we.netWeightOut}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.grossWeightOut}" style="text-align: right">
+                        <snt:outputDecimal value="#{we.grossWeightOut}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.quantityOut}" style="text-align: right">
+                        <snt:outputDecimal value="#{we.quantityOut}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.stockValue}" style="text-align: right">
+                        <snt:outputDecimal value="#{we.stockValue}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.exitReference}" style="text-align: left">
+                        <h:outputText value="#{we.exitReference}"/>
+                    </p:column>
+                    <p:column headerText="#{msgs.note}" style="text-align: left">
+                        <h:outputText value="#{we.note}"/>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+        </p:dialog>
+        <script type="text/javascript">
+                function onSave(xhr, status, args) {
+                    if (!args.validationFailed) {
+                        exitDlg.hide();
+                    }
+                }
+        </script>
+    </ui:define>
+    <ui:define name="helpContent">
+        
+        <p:panel header="#{msgs.home_help_header}">
+            
+            <p:panelGrid styleClass="no_border_grid">
+
+                <p:row rendered="#{!sessionData.admin}">
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.home_help_1}"/>
+                    </p:column>
+                </p:row>
+                <p:row rendered="#{!sessionData.admin}">
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.home_help_2}"/>
+                    </p:column>
+                </p:row>
+                <p:row rendered="#{!sessionData.admin}">
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.home_help_3}" style="font-weight: bold;"/>
+                    </p:column>
+                </p:row>
+                <p:row rendered="#{!sessionData.admin}">
+                    <p:column>
+                        <span class="ui-icon ui-icon-plus ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.home_help_4}"/>
+                    </p:column>
+                </p:row>
+                <p:row rendered="#{!sessionData.admin}">
+                    <p:column>
+                        <span class="ui-icon ui-icon-newwin ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.home_help_5}"/>
+                    </p:column>
+                </p:row>
+                <p:row rendered="#{!sessionData.admin}">
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.home_help_6}"/>
+                    </p:column>
+                </p:row>
+                <p:row rendered="#{!sessionData.admin}">
+                    <p:column colspan="2">
+                        <h:outputText value="#{msgs.home_help_3}" style="font-weight: bold;"/>
+                    </p:column>
+                </p:row>
+                <p:row rendered="#{!sessionData.admin}">
+                    <p:column>
+                        <span class="ui-icon ui-icon-pencil ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.home_help_7}"/>
+                    </p:column>
+                </p:row>
+                <p:row rendered="#{!sessionData.admin}">
+                    <p:column>
+                        <span class="ui-icon ui-icon-trash ui-corner-all ui-state-default"></span>
+                    </p:column>
+                    <p:column>
+                        <h:outputText value="#{msgs.home_help_8}"/>
+                    </p:column>
+                </p:row>
+            </p:panelGrid>
+            
+            <!-- Common actions -->
+            <ui:include src="help.xhtml"/>          
+            
+        </p:panel>
+        
+    </ui:define>
+</ui:composition>
