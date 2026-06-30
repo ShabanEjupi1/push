@@ -19,7 +19,7 @@
                     </p:commandLink>
                 </f:facet>  
                 <p:dataTable var="w" value="#{homeBean.data}" rowKey="#{w.wi.id}" lazy="true"
-                             paginator="true" rows="5"  paginatorPosition="bottom"
+                             paginator="true" rows="10" paginatorPosition="bottom"
                              id="wTable" widgetVar="wTable" 
                              paginatorTemplate="{FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {CurrentPageReport} "
                              currentPageReportTemplate="#{msgs.records_no} {totalRecords}"

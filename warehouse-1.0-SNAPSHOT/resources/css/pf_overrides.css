@@ -13,26 +13,29 @@
 .ui-toolbar {
     background: #ffffff !important;
     border: 1px solid #e5e7eb !important;
-    padding: 8px 16px !important;
+    padding: 6px 12px !important;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     border-radius: 8px !important;
     margin-bottom: 0 !important;
-}
-
-.ui-toolbar-group-left, .ui-toolbar-group-right {
-    display: inline-flex !important;
-    gap: 8px !important;
+    display: flex !important;
     align-items: center !important;
-}
-
-/* Override hardcoded inline style width of the toolbar */
-.ui-toolbar[style*="width: 400px"] {
-    width: auto !important;
-    max-width: none !important;
-    min-width: 450px !important;
-    display: inline-flex !important;
-    align-items: center !important;
+    width: 100% !important;
     box-sizing: border-box !important;
+}
+
+.ui-toolbar-group-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    float: none !important;
+}
+
+.ui-toolbar-group-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    float: none !important;
+    margin-left: auto !important;
 }
 
 /* Input Fields (Text, Password, Textarea) */
@@ -179,20 +182,16 @@
     padding: 5px 10px !important;
     font-size: 12px !important;
     min-width: 0 !important;
+    flex-shrink: 0 !important;
 }
 
 .ui-toolbar .ui-button-icon-only {
     padding: 0 !important;
-    width: 30px !important;
-    height: 30px !important;
+    width: 28px !important;
+    height: 28px !important;
+    flex-shrink: 0 !important;
 }
 
-/* Override hardcoded toolbar width */
-.ui-toolbar[style*="width: 400px"],
-.ui-toolbar {
-    width: auto !important;
-    max-width: none !important;
-}
 
 /* Panels (Main Containers) */
 .ui-panel {
@@ -287,6 +286,22 @@
     border-radius: 4px !important;
     height: auto !important;
     min-height: 0 !important;
+}
+
+/* Calendar filter input in header — match other filter inputs */
+.ui-datatable th .ui-calendar {
+    display: inline-block !important;
+}
+.ui-datatable th .ui-calendar input {
+    padding: 3px 5px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    width: 68px !important;
+    border: 1px solid #d1d5db !important;
+    background: #fff !important;
+    color: #1f2937 !important;
 }
 
 /* Column header sort label */
