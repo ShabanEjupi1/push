@@ -52,11 +52,25 @@ set "SERVER_IP=10.10.10.7"
 set "BACKEND_HOSTPORT=127.0.0.1:8080"
 ```
 
+## Remove the warning properly: use a Dogana-CA cert (recommended)
+
+Dogana runs its own internal CA (`dogana-EMAILSUBBMITION-CA`), and every domain PC
+already trusts it. A certificate **issued by that CA** is therefore trusted with **no
+warning** — even for an IP-only server. To switch to it:
+
+1. On the server run [ssl-tools/request-cert.bat](ssl-tools/request-cert.bat)
+   → makes `ssl\warehouse.p12` (private key) + `ssl\warehouse.csr`.
+2. Submit `warehouse.csr` at `http://<ca-server>/certsrv` (Web Server template),
+   add attribute `san:ipaddress=10.10.10.7`, download the reply as `ssl\warehouse-server.cer`.
+3. Set `NGINX_CERT_MODE=cacert` in [deploy.bat](deploy.bat) and re-run.
+
+Full details: [ssl/README.md](ssl/README.md). The nginx proxy itself is unchanged;
+only the certificate source differs.
+
 ## If you later get a domain name
 
-A real domain unlocks a **free, trusted, auto-renewing Let's Encrypt** cert (no warning).
-At that point, ping me and I'll swap the self-signed step for win-acme — only the cert
-source changes; the nginx proxy stays the same.
+A real *public* domain would also unlock a free, trusted, auto-renewing Let's Encrypt
+cert. On the internal-only IP setup, the Dogana-CA cert above is the right choice.
 
 ## Troubleshooting
 

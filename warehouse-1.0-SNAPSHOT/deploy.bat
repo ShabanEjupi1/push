@@ -37,6 +37,20 @@ set "NGINX_HOME=C:\nginx"
 set "NGINX_VERSION=1.27.4"
 set "SERVER_IP=10.10.10.7"
 set "BACKEND_HOSTPORT=127.0.0.1:8080"
+
+REM --- nginx TLS certificate source ---
+REM selfsigned -> auto-generate a self-signed cert for the IP (works now, one-time browser warning).
+REM cacert     -> use a certificate ISSUED BY THE DOGANA INTERNAL CA (trusted on domain PCs, NO warning).
+REM               To use cacert mode you need three files in the ssl\ folder:
+REM                 1. warehouse.p12       - the private key + CSR (created by ssl-tools\request-cert.bat)
+REM                 2. warehouse-server.cer- the issued leaf cert you download back from the Dogana CA
+REM                 3. dogana-ca.cer       - the Dogana CA cert (already committed here)
+REM               Steps: run ssl-tools\request-cert.bat -> submit ssl\warehouse.csr to http://<ca>/certsrv
+REM               -> save the issued cert as ssl\warehouse-server.cer -> set NGINX_CERT_MODE=cacert -> re-run.
+set "NGINX_CERT_MODE=cacert"
+set "CA_CERT_FILE=%APP_DIR%\ssl\dogana-ca.cer"
+set "SERVER_CERT_FILE=%APP_DIR%\ssl\warehouse-server.cer"
+set "SERVER_P12=%APP_DIR%\ssl\warehouse.p12"
 REM ---------------------
 
 REM Ensure APP_DIR does not end with trailing backslash (for consistency)
@@ -308,17 +322,68 @@ if not exist "%SSL_DIR%" mkdir "%SSL_DIR%"
 if not exist "%NGINX_HOME%\logs" mkdir "%NGINX_HOME%\logs"
 if not exist "%NGINX_HOME%\temp" mkdir "%NGINX_HOME%\temp"
 
-REM 3) Create the self-signed cert (once) and convert it to PEM for nginx
+REM 3) Produce fullchain.pem + privkey.pem for nginx (mode: selfsigned | cacert)
 if exist "%SSL_DIR%\fullchain.pem" goto :nginx_havecert
+echo Preparing nginx certificate (mode: %NGINX_CERT_MODE%)...
+REM Compile the PKCS12 -> PEM helper once; both modes use it (no OpenSSL needed).
+"%JDK_HOME%\bin\javac.exe" -d "%APP_DIR%\ssl-tools" "%APP_DIR%\ssl-tools\CertToPem.java"
+if errorlevel 1 goto :nginx_certfail
+
+if /i "%NGINX_CERT_MODE%"=="cacert" goto :nginx_cacert
+
+REM --- selfsigned: generate a self-signed cert for the IP (one-time browser warning) ---
 echo Generating self-signed certificate for %SERVER_IP% ...
 "%JDK_HOME%\bin\keytool.exe" -genkeypair -alias warehouse -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=%SERVER_IP%, O=Dogana e Kosoves, C=XK" -ext "SAN=IP:%SERVER_IP%" -storetype PKCS12 -keystore "%P12%" -storepass changeit -keypass changeit
 if errorlevel 1 goto :nginx_certfail
-echo Converting certificate to PEM (via JDK helper, no OpenSSL needed)...
-"%JDK_HOME%\bin\javac.exe" -d "%APP_DIR%\ssl-tools" "%APP_DIR%\ssl-tools\CertToPem.java"
-if errorlevel 1 goto :nginx_certfail
 "%JDK_HOME%\bin\java.exe" -cp "%APP_DIR%\ssl-tools" CertToPem "%P12%" changeit warehouse "%SSL_DIR%"
 if errorlevel 1 goto :nginx_certfail
+goto :nginx_havecert
+
+:nginx_cacert
+REM --- cacert: use a leaf cert issued by the Dogana internal CA (trusted, no warning) ---
+if not exist "%SERVER_P12%" (
+    echo ERROR: "%SERVER_P12%" not found.
+    echo        Run  ssl-tools\request-cert.bat  first to create the key + CSR, then submit the CSR
+    echo        to the Dogana CA and save the issued cert as "%SERVER_CERT_FILE%".
+    goto :nginx_certfail
+)
+if not exist "%SERVER_CERT_FILE%" (
+    echo ERROR: issued server cert "%SERVER_CERT_FILE%" not found.
+    echo        Submit ssl\warehouse.csr to http://^<ca^>/certsrv and save the reply here first.
+    goto :nginx_certfail
+)
+echo Building the nginx certificate chain from the issued cert...
+REM NOTE: we do NOT import the CA reply back into warehouse.p12. Java 7 PKCS12
+REM keystores cannot store trusted-CA entries, so that path fails with
+REM "Failed to establish chain from reply". Instead we build nginx's two PEM
+REM files directly:
+REM   privkey.pem  - the private key already inside warehouse.p12 (the CA signed
+REM                  THIS key, so it matches the issued cert).
+REM   fullchain.pem- the issued leaf cert followed by the Dogana CA cert.
+REM 1) private key -> privkey.pem  (CertToPem also writes a fullchain.pem we overwrite next)
+"%JDK_HOME%\bin\java.exe" -cp "%APP_DIR%\ssl-tools" CertToPem "%SERVER_P12%" changeit warehouse "%SSL_DIR%"
+if errorlevel 1 goto :nginx_certfail
+REM 2) fullchain.pem = issued leaf + Dogana CA. keytool -printcert -rfc reads DER OR
+REM    PEM input and always emits PEM, so it normalises both files for us.
+"%JDK_HOME%\bin\keytool.exe" -printcert -rfc -file "%SERVER_CERT_FILE%" > "%SSL_DIR%\fullchain.pem" 2>nul
+if errorlevel 1 (
+    echo ERROR: could not read the issued cert "%SERVER_CERT_FILE%".
+    echo        Make sure it is the Base-64 reply to ssl\warehouse.csr from THIS server.
+    goto :nginx_certfail
+)
+if exist "%CA_CERT_FILE%" "%JDK_HOME%\bin\keytool.exe" -printcert -rfc -file "%CA_CERT_FILE%" >> "%SSL_DIR%\fullchain.pem" 2>nul
+goto :nginx_havecert
+
 :nginx_havecert
+
+REM 3b) Make the cert easy to trust on clients, and trust it on THIS machine now
+copy /y "%SSL_DIR%\fullchain.pem" "%APP_DIR%\warehouse-trust.crt" >nul 2>&1
+echo Trusting the certificate on this server (removes the warning here)...
+certutil -addstore -f Root "%SSL_DIR%\fullchain.pem" >nul 2>&1
+REM Also trust the Dogana internal CA itself, so any cert it issues is trusted here.
+if exist "%CA_CERT_FILE%" certutil -addstore -f Root "%CA_CERT_FILE%" >nul 2>&1
+echo Distribute this file to staff PCs (or push via Group Policy) to remove the warning:
+echo     %APP_DIR%\warehouse-trust.crt
 
 REM 4) Write nginx.conf from the template (fill in IP / backend / cert dir)
 echo Writing nginx configuration...
@@ -367,7 +432,12 @@ echo ==========================================================
 echo SUCCESS: Application compiled and deployed successfully!
 echo Context Root: %CONTEXT_ROOT%
 echo Access URL: https://%SERVER_IP%%CONTEXT_ROOT%/  (HTTP redirects to HTTPS via nginx)
-echo Note: browsers show a one-time "not trusted" warning (self-signed, IP-only).
+if /i "%NGINX_CERT_MODE%"=="cacert" (
+    echo Cert: issued by the Dogana CA - trusted on domain PCs, no browser warning.
+) else (
+    echo Note: browsers show a one-time "not trusted" warning (self-signed, IP-only).
+    echo       Switch to a Dogana-CA cert to remove it - see ssl\README.md.
+)
 echo ==========================================================
 pause
 exit /b 0
