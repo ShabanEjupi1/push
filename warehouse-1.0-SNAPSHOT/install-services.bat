@@ -402,6 +402,13 @@ if not exist "%APP_DIR%\jvm-size.ps1" (
 set "WHS_DOMAIN_XML=%GLASSFISH_ROOT%\glassfish\domains\domain1\config\domain.xml"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%APP_DIR%\jvm-size.ps1" ^
     -JavaExe "%JDK_HOME%\bin\java.exe" -DomainXml "!WHS_DOMAIN_XML!" -Apply >nul
+REM The heap edit above rewrites domain.xml. If anything ends up in front of the
+REM "<?xml" declaration - a UTF-8 BOM is what actually happened - start-domain
+REM fails with "ParseError at [1,1] Content is not allowed in prolog" and the
+REM JVM never runs, so the heap fix would look like it did nothing at all.
+REM One line, not a caret-continued one inside the IF: that combination is where
+REM batch parsing goes wrong, and this file has been bitten by it before.
+if exist "%APP_DIR%\fix-domain-xml.ps1" powershell -NoProfile -ExecutionPolicy Bypass -File "%APP_DIR%\fix-domain-xml.ps1" -DomainXml "!WHS_DOMAIN_XML!"
 REM A domain killed by a failed start leaves config\pid behind; the next start
 REM then reports an instance is already running and refuses.
 if exist "%GLASSFISH_ROOT%\glassfish\domains\domain1\config\pid" (

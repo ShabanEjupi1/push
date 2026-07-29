@@ -94,6 +94,55 @@ echo Full log of this run: %WHS_LOG%
 echo.
 
 REM --------------------------------------------------------------------------
+REM  Preflight - every helper this deployment needs has to be HERE, next to
+REM  this script, before anything starts.
+REM
+REM  This check is here because of a real failure. The server was running a
+REM  folder copied before fix-domain-xml.ps1 existed, so the domain.xml repair
+REM  simply never ran. Nothing said so: the run looked completely normal for two
+REM  minutes and then died at start-domain with
+REM      MiniXmlParserException ... Content is not allowed in prolog
+REM  which points at GlassFish, not at a missing file. The only clue anywhere in
+REM  the output was the version number in deploy.bat's banner.
+REM
+REM  So: fail in the first second, naming the file, instead of failing in two
+REM  minutes blaming something else.
+REM --------------------------------------------------------------------------
+set "WHS_MISSING="
+for %%F in (deploy.bat install-services.bat jvm-size.ps1 fix-domain-xml.ps1 healthcheck.ps1) do (
+    if not exist "%APP_DIR%\%%F" set "WHS_MISSING=!WHS_MISSING! %%F"
+)
+if defined WHS_MISSING (
+    echo ==========================================================
+    echo ERROR: this is an incomplete copy of the deployment scripts
+    echo ==========================================================
+    echo   Missing from %APP_DIR%:
+    echo      !WHS_MISSING!
+    echo.
+    echo   Copy the WHOLE warehouse-1.0-SNAPSHOT folder over from the
+    echo   development machine again - not just the files you think
+    echo   changed. Every one of the scripts above is a repair step
+    echo   that runs silently when it is present, so a partial copy
+    echo   does not look like a partial copy. It looks like the bug
+    echo   that script was written to fix coming back.
+    >>"%WHS_LOG%" echo PREFLIGHT FAILED - missing:!WHS_MISSING!
+    goto :failed
+)
+
+REM Record which copy of deploy.bat this run used. deploy.bat prints its own
+REM version too, but that is 200 lines into the output; here it is on the line
+REM after the header, where you look first when reading back a failed run.
+set "WHS_DEPLOY_VER=unknown"
+for /f "usebackq tokens=2 delims==" %%v in (`findstr /c:"SCRIPT_VERSION=" "%APP_DIR%\deploy.bat"`) do set "WHS_DEPLOY_VER=%%v"
+REM The matched line is  set "SCRIPT_VERSION=2026-07-29.2"  so what comes back
+REM still carries the closing quote of the batch statement. Drop every quote
+REM rather than trying to match them: %%~v does not strip an unbalanced one.
+set "WHS_DEPLOY_VER=!WHS_DEPLOY_VER:"=!"
+echo Scripts: deploy.bat version !WHS_DEPLOY_VER! ^(all helper scripts present^)
+>>"%WHS_LOG%" echo PREFLIGHT OK - deploy.bat version !WHS_DEPLOY_VER!
+echo.
+
+REM --------------------------------------------------------------------------
 echo ##########################################################
 echo #  STEP 0 of 3 - Machine check ^(memory^)
 echo ##########################################################

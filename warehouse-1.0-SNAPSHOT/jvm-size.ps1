@@ -226,10 +226,22 @@ if ($DomainXml) {
                 # Write to a temp file and parse it as XML before it replaces the
                 # real one. A corrupted domain.xml is not a config problem, it is
                 # a rebuild-the-domain problem.
+                #
+                # UTF-8 with NO BOM, written through .NET rather than
+                # "Set-Content -Encoding UTF8": Windows PowerShell's UTF8 always
+                # emits a BOM, and GlassFish 3.1.2 reads domain.xml as characters
+                # (InputStreamReader), so the BOM is not skipped - it lands in
+                # front of the prolog and every start-domain then dies with
+                # "ParseError at [1,1] Content is not allowed in prolog".
+                # This exact line is what broke the domain once already.
                 $tmp = $DomainXml + ".new"
-                Set-Content -Path $tmp -Value $new -Encoding UTF8
+                [System.IO.File]::WriteAllText($tmp, $new, (New-Object System.Text.UTF8Encoding($false)))
                 try {
                     [xml](Get-Content $tmp -Raw -ErrorAction Stop) | Out-Null
+                    # [xml] skips a leading BOM, GlassFish does not - so check the
+                    # first byte too, or the file passes here and fails there.
+                    $firstByte = ([System.IO.File]::ReadAllBytes($tmp))[0]
+                    if ($firstByte -ne 0x3C) { throw "the file does not start with '<'" }
                     if (-not (Test-Path ($DomainXml + ".bak"))) {
                         Copy-Item $DomainXml ($DomainXml + ".bak") -Force
                     }

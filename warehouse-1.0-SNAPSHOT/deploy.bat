@@ -6,7 +6,7 @@ REM into deploy-full.log, so a log can be matched to the script that produced
 REM it. Without it there is no way to tell from the output whether the server is
 REM running the current script or a copy from three deployments ago - which has
 REM already cost one debugging session.
-set "SCRIPT_VERSION=2026-07-29.1"
+set "SCRIPT_VERSION=2026-07-29.3"
 
 echo ==========================================================
 echo       Warehouse Application Compilation and Deployment
@@ -211,6 +211,13 @@ if exist "%DOMAIN_XML%" (
         echo Backing up domain.xml...
         copy "%DOMAIN_XML%" "%DOMAIN_XML%.bak" >nul
     )
+    REM Before anything reads or rewrites it: make sure the file still begins at
+    REM "<?xml" with no byte-order mark in front. A BOM there is invisible to
+    REM every check in this script but stops GlassFish dead with
+    REM "ParseError at [1,1] Content is not allowed in prolog" - see
+    REM fix-domain-xml.ps1 for why, and why it had to be checked at byte level.
+    call :sanitize_domain_xml
+    if errorlevel 1 goto :error
     call :migrate_domain_xml
     if errorlevel 1 goto :error
 ) else (
@@ -758,6 +765,35 @@ REM  requests on [localhost:4848]" - none of which name the actual problem.
 REM ##########################################################################
 
 REM --------------------------------------------------------------------------
+REM  :sanitize_domain_xml - remove anything sitting in front of the "<?xml"
+REM  declaration (a UTF-8 BOM, in practice) and rewrite the file BOM-free.
+REM
+REM  This is the fix for:
+REM      MiniXmlParserException: ParseError at [row,col]:[1,1]
+REM      Message: Content is not allowed in prolog.
+REM  which is what the domain reported instead of starting. The BOM was put
+REM  there by this script's own repair steps - "Set-Content -Encoding UTF8"
+REM  always writes one - and nothing caught it because .NET's XML parser skips a
+REM  BOM while GlassFish's does not. Both writers now write BOM-free; this call
+REM  cleans up a file that a previous run already damaged.
+REM --------------------------------------------------------------------------
+:sanitize_domain_xml
+if not exist "%APP_DIR%\fix-domain-xml.ps1" (
+    echo WARNING: fix-domain-xml.ps1 is not in %APP_DIR%, so the domain.xml
+    echo          prolog check is being SKIPPED. If start-domain below fails with
+    echo          "Content is not allowed in prolog", this missing file is why -
+    echo          copy the full script folder over from the development machine.
+    exit /b 0
+)
+powershell -NoProfile -ExecutionPolicy Bypass -File "%APP_DIR%\fix-domain-xml.ps1" ^
+    -DomainXml "%DOMAIN_XML%"
+if errorlevel 1 (
+    echo ERROR: domain.xml is damaged and could not be repaired - see above.
+    exit /b 1
+)
+exit /b 0
+
+REM --------------------------------------------------------------------------
 REM  :migrate_domain_xml - replace the old server's paths / DB IP, but only if
 REM  they are actually in the file, and never leave a half-written file behind.
 REM  It also repairs the damage the previous version of this script could do:
@@ -788,8 +824,9 @@ powershell -NoProfile -Command ^
     "Write-Host '   Migrating old server paths / database IP in domain.xml...'; " ^
     "$fixed = $text -replace [regex]::Escape($old), $new -replace '10\.10\.10\.210', '10.10.10.91'; " ^
     "$tmp = $xml + '.new'; " ^
-    "Set-Content -Path $tmp -Value $fixed -Encoding UTF8; " ^
-    "try { [xml](Get-Content $tmp -Raw -ErrorAction Stop) | Out-Null } " ^
+    "[System.IO.File]::WriteAllText($tmp, $fixed, (New-Object System.Text.UTF8Encoding($false))); " ^
+    "try { [xml](Get-Content $tmp -Raw -ErrorAction Stop) | Out-Null; " ^
+    "      if (([System.IO.File]::ReadAllBytes($tmp))[0] -ne 0x3C) { throw 'leading bytes before the prolog' } } " ^
     "catch { Write-Host '   The rewritten domain.xml does not parse - keeping the original untouched.'; Remove-Item $tmp -Force; exit 1 }; " ^
     "Move-Item $tmp $xml -Force; " ^
     "Write-Host '   Paths and database IP updated.'"
@@ -999,6 +1036,12 @@ if not exist "%APP_DIR%\jvm-size.ps1" (
 )
 powershell -NoProfile -ExecutionPolicy Bypass -File "%APP_DIR%\jvm-size.ps1" ^
     -JavaExe "%JDK_HOME%\bin\java.exe" -DomainXml "%DOMAIN_XML%" -Apply >nul
+
+REM   3. a domain.xml the JVM never even got to read, because something sits in
+REM      front of its "<?xml". Re-checked here as well as before the first start
+REM      because the heap repair just above rewrote the file.
+echo   - checking domain.xml still starts at its XML declaration...
+call :sanitize_domain_xml
 exit /b 0
 
 REM --------------------------------------------------------------------------
@@ -1037,6 +1080,13 @@ echo    'Address already in use'  -^> another program holds the port; see the li
 echo    'Could not reserve enough space for object heap' -^> heap too big for RAM+page file
 echo    'java.net.BindException'  -^> same as the first one
 echo    'Keystore was tampered'   -^> keystore password wrong or keystore.jks corrupt
+echo.
+echo NOTE: if the failure was 'Content is not allowed in prolog' / MiniXmlParser,
+echo       that error comes from asadmin itself and is printed ABOVE, in the
+echo       start-domain output - server.log will not mention it at all, because
+echo       the JVM never got as far as starting. It means domain.xml has bytes
+echo       in front of its ^<?xml declaration. Repair it with:
+echo          powershell -NoProfile -ExecutionPolicy Bypass -File "%APP_DIR%\fix-domain-xml.ps1" -DomainXml "%DOMAIN_XML%"
 
 :rsf_checklist
 echo.
