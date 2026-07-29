@@ -469,32 +469,54 @@
 }
 
 /* Footer.
-   This was height:38px + overflow-y:auto, but template.xhtml puts two stacked
-   rows inside it (38px version line + 30px signature line + 5px margin = 73px).
-   The result was a permanently scrollbarred footer with the second line cut in
-   half. Fill the layout unit instead and centre the content in it - the unit is
-   sized by size="60" on the south p:layoutUnit. */
+   The south layout unit is one line tall (size="38" in template.xhtml) and holds
+   two stacked .footer-line rows of exactly that height. Only the first - the
+   version line - is in view; the signature underneath is deliberately below the
+   fold and is reached by scrolling inside this container. Each row is a full
+   viewport of the footer, so scroll-snap lands cleanly on one line or the other
+   and no row is ever shown half-cut. */
 .footer-scroll-container {
     height: 100% !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    display: block !important;
+    scroll-snap-type: y mandatory;
 }
 
+.footer-scroll-container .footer-line {
+    /* One full footer viewport per row. 100% tracks whatever height the layout
+       unit actually resolves to; min-height covers the case where it does not
+       resolve (mobile, where the unit falls back to auto height). */
+    height: 100%;
+    min-height: 38px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    scroll-snap-align: start;
+}
+
+/* Discreet but real: the scrollbar is the only affordance that says there is a
+   second line down there, so it has to stay wide enough to see and to grab.
+   4px was invisible against #F8F8F8. */
 .footer-scroll-container::-webkit-scrollbar {
-    width: 4px;
+    width: 8px;
 }
 .footer-scroll-container::-webkit-scrollbar-track {
     background: transparent;
 }
 .footer-scroll-container::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 4px;
 }
 .footer-scroll-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
+}
+/* Firefox has no ::-webkit-scrollbar; without this it draws the full-width
+   default one. IE/Edge-legacy ignore both and draw their own, which is fine -
+   the point is that a scrollbar exists, not that it looks identical. */
+.footer-scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
 }
 
 #dev-signature {

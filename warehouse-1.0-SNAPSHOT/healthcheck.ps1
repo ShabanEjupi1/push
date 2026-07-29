@@ -207,6 +207,7 @@ if ($certLine) {
 $url = "https://$ServerIp$ContextRoot/"
 $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
 $status = $null
+$errStatus = $null
 
 Write-Host ""
 Write-Host "Polling $url (up to $TimeoutSeconds s)..." -NoNewline
@@ -221,6 +222,12 @@ while ((Get-Date) -lt $deadline) {
         if ($resp -and $resp.StatusCode) {
             $code = [int]$resp.StatusCode
             if ($code -ge 200 -and $code -lt 400) { $status = $code; break }
+            # 4xx/5xx is still an answer: GlassFish is up, listening and
+            # speaking TLS, and the APP is what is broken. Remember it so the
+            # summary can say so instead of "no answer", which reads as a
+            # network/TLS fault and sends you off checking ports for nothing.
+            # Keep polling - a 503 during deployment turns into a 200 shortly.
+            $errStatus = $code
         }
     }
     Write-Host "." -NoNewline
@@ -230,6 +237,9 @@ Write-Host ""
 
 if ($status) {
     Write-Row "https app response" "HTTP $status" $true
+} elseif ($errStatus) {
+    Write-Row "https app response" "HTTP $errStatus - server answered, app failed" $false
+    $allGood = $false
 } else {
     Write-Row "https app response" "no answer in ${TimeoutSeconds}s" $false
     $allGood = $false

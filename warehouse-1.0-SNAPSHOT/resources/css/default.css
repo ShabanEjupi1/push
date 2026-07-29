@@ -356,9 +356,18 @@ body {
         padding: 20px !important;
     }
 
-    /* Footer no longer needs to be pinned to a fixed unit height. */
-    .footer-scroll-container {
-        height: auto !important;
-        padding: 8px 0 !important;
+    /* Footer stays one line tall here too. The block above puts the layout units
+       back in normal flow with height:auto, so the footer would grow to fit both
+       rows and show the signature without any scrolling - pin it back to one line.
+
+       The selector is qualified with .ui-layout-south deliberately. pf_overrides.css
+       sets `.footer-scroll-container { height: 100% !important }` and is loaded
+       after this file, so a bare `.footer-scroll-container` here has equal
+       specificity and LOSES the tie on source order - the 100% would then resolve
+       against an auto-height parent, collapse to auto, and expose both rows. The
+       extra class outranks it at any source order. */
+    .ui-layout-south .footer-scroll-container {
+        height: 38px !important;
+        padding: 0 !important;
     }
 }

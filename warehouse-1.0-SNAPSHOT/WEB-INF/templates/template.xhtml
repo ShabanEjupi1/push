@@ -103,14 +103,15 @@
                 </p:layoutUnit>
 
                 <!-- SOUTH -->
-                <!-- size="60" gives the two footer lines room. Without it the unit
-                     defaulted to ~38px and clipped the second line. -->
-                <p:layoutUnit position="south" size="60" style="background: #F8F8F8; font-weight: bold; border-top: 1px solid #E5E7EB !important; border-bottom: none !important; border-left: none !important; border-right: none !important;">
+                <!-- size="38" is exactly one footer line. The signature line below it
+                     is out of view and is only reached by scrolling inside the footer
+                     (see .footer-scroll-container / .footer-line in pf_overrides.css). -->
+                <p:layoutUnit position="south" size="38" style="background: #F8F8F8; font-weight: bold; border-top: 1px solid #E5E7EB !important; border-bottom: none !important; border-left: none !important; border-right: none !important;">
                     <h:panelGroup styleClass="footer-scroll-container" layout="block">
-                        <div style="display: flex; align-items: center; justify-content: center;">
+                        <div class="footer-line">
                             <h:outputLabel value="version #{versionMsgs.version} @ Dogana e Kosovës" style="color: #6B7280; font-size: 12px; font-weight: 500; letter-spacing: 0.025em;"/>
                         </div>
-                        <div style="display: flex; align-items: center; justify-content: center; margin-top: 2px;">
+                        <div class="footer-line">
                             <span id="dev-signature">Shaban Ejupi</span>
                         </div>
                     </h:panelGroup>
