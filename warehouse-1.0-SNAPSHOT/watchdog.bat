@@ -51,6 +51,12 @@ REM delimiters, so a blank field would shift every value after it.
 REM PORT_UP is the one that actually answers "is the site up?". The service can
 REM be Running while the JVM inside it has stopped serving, and with the
 REM scheduled-task fallback there may be no service to ask about at all.
+REM
+REM TcpClient, not Get-NetTCPConnection: that cmdlet needs Server 2012+ and is
+REM absent on Server 2008 R2, where it returns nothing instead of failing. Every
+REM port then reads DOWN, and in the no-service branch below this watchdog would
+REM run start-domain against a perfectly healthy server every five minutes.
+REM deploy.bat reached the same conclusion - see :is_port_open there.
 set "GF_SVC="
 set "GF_STATE="
 set "FREE_MB="
@@ -63,7 +69,8 @@ for /f "usebackq tokens=1-5 delims=|" %%a in (`powershell -NoProfile -Command ^
     "$f = [int]((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1024); " ^
     "$o = '-'; $lg = '%GLASSFISH_ROOT%\glassfish\domains\%DOMAIN%\logs\server.log'; " ^
     "if (Test-Path $lg) { if (@(Get-Content $lg -Tail 300 -EA SilentlyContinue | Select-String 'OutOfMemoryError' -SimpleMatch).Count) { $o = 'OOM' } }; " ^
-    "$p = 'DOWN'; if (Get-NetTCPConnection -LocalPort %SERVE_PORT% -State Listen -EA SilentlyContinue) { $p = 'UP' }; " ^
+    "$p = 'DOWN'; $tc = New-Object Net.Sockets.TcpClient; " ^
+    "try { $tc.Connect('127.0.0.1', %SERVE_PORT%); if ($tc.Connected) { $p = 'UP' }; $tc.Close() } catch { }; " ^
     "$n + '|' + $st + '|' + $f + '|' + $o + '|' + $p"`) do (
     set "GF_SVC=%%a"
     set "GF_STATE=%%b"

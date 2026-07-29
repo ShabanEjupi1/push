@@ -160,7 +160,7 @@ if errorlevel 1 (
 )
 echo.
 echo    NOTE: these take effect at the next domain START, which happens in
-echo          step [3/5] below - not on the instance running right now.
+echo          step [3/6] below - not on the instance running right now.
 echo.
 
 REM ==========================================================================

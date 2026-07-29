@@ -37,6 +37,32 @@ function Finish {
     exit $Code
 }
 
+# Is something listening on a local port?
+#
+# Get-NetTCPConnection is the obvious cmdlet and it is used when it exists, but
+# it ships with the NetTCPIP module - Windows 8 / Server 2012 and later. On
+# Server 2008 R2 it is simply absent, and because this script sets
+# $ErrorActionPreference = "SilentlyContinue" its absence is SILENT: every port
+# reads as free and the health check fails a site that is running perfectly.
+# deploy.bat hit this and settled on TcpClient (see :is_port_open there); the
+# same fallback belongs here, so both scripts answer the question the same way.
+$script:HasNetTcp = [bool](Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue)
+function Test-PortListening {
+    param([int]$Port)
+    if ($script:HasNetTcp) {
+        return [bool](Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)
+    }
+    $c = New-Object Net.Sockets.TcpClient
+    try {
+        $c.Connect("127.0.0.1", $Port)
+        $up = $c.Connected
+        $c.Close()
+        return $up
+    } catch {
+        return $false
+    }
+}
+
 function Write-Row {
     param([string]$Label, [string]$Value, [bool]$Good)
     $mark = if ($Good) { "  OK  " } else { " FAIL " }
@@ -117,8 +143,7 @@ foreach ($t in $tasks) {
 # 8080 is the plain-HTTP listener kept for local diagnosis. In nginx mode 80 and
 # 443 are nginx and 8080 is the backend.
 foreach ($p in @(80, 443, 8080)) {
-    $listening = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue
-    $ok = [bool]$listening
+    $ok = Test-PortListening -Port $p
     Write-Row ("port $p") $(if ($ok) { "listening" } else { "NOT LISTENING" }) $ok
     if (-not $ok) { $allGood = $false }
 }
