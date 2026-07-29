@@ -5,8 +5,13 @@
     <jta-data-source>jdbc/kcustoms</jta-data-source>
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <properties>
-      <property name="eclipselink.logging.level" value="FINE"/>
-      <property name="eclipselink.logging.parameters" value="true"/>
+      <!-- FINE + logging.parameters=true wrote every SQL statement AND every bound
+           parameter value into server.log. On a production box that (a) grows the log
+           without bound, which is a real cause of the server dying after a few days,
+           and (b) puts trader/warehouse data and password hashes on disk in clear.
+           Set back to FINE only for short, deliberate debugging sessions. -->
+      <property name="eclipselink.logging.level" value="WARNING"/>
+      <property name="eclipselink.logging.parameters" value="false"/>
     </properties>
   </persistence-unit>
 </persistence>

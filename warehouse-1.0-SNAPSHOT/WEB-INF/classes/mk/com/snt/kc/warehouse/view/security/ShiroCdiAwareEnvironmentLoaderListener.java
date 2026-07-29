@@ -24,6 +24,7 @@ import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.cache.MemoryConstrainedCacheManager;
+import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.RealmSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.realm.Realm;
@@ -45,6 +46,19 @@ extends EnvironmentLoaderListener {
         MemoryConstrainedCacheManager cacheManager = new MemoryConstrainedCacheManager();
         this.theRealm.setCacheManager((CacheManager)cacheManager);
         rsm.setRealm((Realm)this.theRealm);
+
+        // SECURITY: Shiro 1.2.2 wires a CookieRememberMeManager by default, and it
+        // decrypts+deserialises any inbound "rememberMe" cookie with a HARDCODED AES
+        // key that is public knowledge (CVE-2016-4437). That is a pre-authentication
+        // remote code execution path, and commons-beanutils/commons-collections on our
+        // classpath supply a working gadget chain. This app never issues a rememberMe
+        // cookie (Login always passes rememberMe=false and there is no checkbox on
+        // login.xhtml), so we simply remove the manager: nothing accepts the cookie,
+        // nothing deserialises it.
+        if (rsm instanceof DefaultSecurityManager) {
+            ((DefaultSecurityManager)rsm).setRememberMeManager(null);
+        }
+
         ((DefaultWebEnvironment)environment).setSecurityManager((SecurityManager)rsm);
         return environment;
     }

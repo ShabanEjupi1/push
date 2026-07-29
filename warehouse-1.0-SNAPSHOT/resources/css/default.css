@@ -1,4 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* NOTE: this file used to start with
+ *     @import url('https://fonts.googleapis.com/css2?family=Inter...');
+ * That made every page load reach out to fonts.googleapis.com. On this server
+ * (internal Dogana network, no internet - see deploy.bat troubleshooting) the
+ * request cannot succeed: where the firewall silently drops it the browser
+ * stalls on the stylesheet until it times out, which is the "pages are slow to
+ * appear" complaint. It also disclosed who was using the app, and when, to a
+ * third party. The font never actually arrived, so the stack below was already
+ * what everyone saw. Removing the import changes nothing visually and removes
+ * both problems. If Inter is installed on the staff PCs it is still used.
+ */
 
 /* Main Body and General Reset */
 body {
@@ -118,7 +128,11 @@ body {
     top: 50% !important;
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
+    /* Was a flat 420px, which overflows the screen on a phone or a narrow
+       window and pushed the password field off the right edge. Still exactly
+       420px on any normal display; only shrinks when there is less room. */
     width: 420px !important;
+    max-width: calc(100vw - 32px) !important;
     height: auto !important;
     background: #ffffff !important;
     border: 1px solid #f3f4f6 !important;
@@ -245,4 +259,106 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* ==========================================================================
+   SMALL SCREENS
+   ==========================================================================
+   Everything below is inside a max-width media query, so on a desktop PC - how
+   essentially all staff use this app - nothing here applies and the rendering
+   is unchanged. Only phones, tablets and narrow windows are affected.
+
+   Why it is needed: <p:layout fullPage="true"> is a jQuery-UI-layout widget.
+   It absolutely positions each unit with INLINE top/left/width/height computed
+   in JavaScript, and pins the body at overflow:hidden. That is a desktop-only
+   model: on a 360px screen the header alone (two logos + title + an eight
+   button toolbar) is taller than the fixed 160px north unit, so it gets
+   clipped, and the page cannot be scrolled to reach what was cut off.
+
+   The fix is to put the units back into normal document flow at small widths
+   and let the page scroll like an ordinary web page. An author !important
+   declaration outranks an inline style that has no !important, which is what
+   lets these rules beat the inline values the layout script writes.
+
+   If this ever misbehaves, deleting this single block restores the previous
+   behaviour exactly - nothing outside it was changed for responsiveness.
+   ========================================================================== */
+@media (max-width: 900px) {
+
+    /* Release the body from the full-page layout so the document can scroll. */
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+        position: static !important;
+    }
+
+    /* Put every layout unit back into normal flow, stacked top to bottom. */
+    .ui-layout-unit,
+    .ui-layout-north,
+    .ui-layout-center,
+    .ui-layout-south {
+        position: static !important;
+        display: block !important;
+        width: auto !important;
+        height: auto !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        margin: 0 !important;
+    }
+
+    .ui-layout-unit-content {
+        height: auto !important;
+        overflow: visible !important;
+        padding: 12px !important;
+    }
+
+    /* Drag handles and collapse arrows are meaningless once units are stacked. */
+    .ui-layout-resizer,
+    .ui-layout-toggler {
+        display: none !important;
+    }
+
+    /* Header: stack the two logos and the title/toolbar block vertically
+       instead of forcing them into one 3-column row. */
+    #mainMenuPanel > table,
+    #mainMenuPanel > table > tbody,
+    #mainMenuPanel > table > tbody > tr {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #mainMenuPanel > table > tbody > tr > td {
+        display: inline-block !important;
+        width: auto !important;
+        vertical-align: middle !important;
+    }
+
+    /* The third cell holds the title + toolbar and needs the full width. */
+    #mainMenuPanel > table > tbody > tr > td:nth-child(3) {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #mainMenuPanel img {
+        height: 40px !important;
+    }
+
+    /* Log in form: centring by absolute position + translate assumes a fixed
+       viewport. In normal flow it just needs to be a centred card. */
+    .login_panel {
+        position: static !important;
+        transform: none !important;
+        margin: 24px auto !important;
+        width: auto !important;
+        max-width: calc(100vw - 24px) !important;
+        padding: 20px !important;
+    }
+
+    /* Footer no longer needs to be pinned to a fixed unit height. */
+    .footer-scroll-container {
+        height: auto !important;
+        padding: 8px 0 !important;
+    }
 }

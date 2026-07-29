@@ -21,7 +21,9 @@ import mk.com.snt.kc.warehouse.domain.User;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.DisabledAccountException;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
@@ -38,7 +40,9 @@ extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         String username = (String)principals.fromRealm(this.getName()).iterator().next();
         User user = this.userManager.getUser(username);
-        if (user != null) {
+        // A deactivated account must hold no roles, otherwise an admin who was
+        // switched off keeps ROLE_ADMIN for the life of their session.
+        if (user != null && user.isActive()) {
             SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
             info.addRole(ROLE_USER);
             if (user.isAdministrator()) {
@@ -52,9 +56,14 @@ extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         UsernamePasswordToken upToken = (UsernamePasswordToken)token;
         User user = this.userManager.getUser(upToken.getUsername());
-        if (user != null) {
-            return new SimpleAuthenticationInfo((Object)upToken.getUsername(), (Object)user.getPassword(), this.getName());
+        if (user == null) {
+            throw new UnknownAccountException("Invalid username");
         }
-        throw new AuthenticationException("Invalid username");
+        // Admin can deactivate a user (WHS_ADM_USERS.ACTIVE). Until this check
+        // existed, deactivation had no effect on login at all.
+        if (!user.isActive()) {
+            throw new DisabledAccountException("Account is deactivated");
+        }
+        return new SimpleAuthenticationInfo((Object)upToken.getUsername(), (Object)user.getPassword(), this.getName());
     }
 }

@@ -12,6 +12,11 @@
             <title><ui:insert name="title">#{msgs.app_name}</ui:insert></title>
             <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
             <meta http-equiv="cache-control" content="no-cache"/>
+            <!-- Without this a phone renders the page at a virtual 980px and then
+                 zooms out, so text is unreadable AND no max-width media query can
+                 ever match. Pairs with the small-screen block at the bottom of
+                 default.css; neither is much use without the other. -->
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
             <h:outputStylesheet library="css" name="default.css"/>
         </h:head>
         <h:body>
@@ -98,12 +103,14 @@
                 </p:layoutUnit>
 
                 <!-- SOUTH -->
-                <p:layoutUnit position="south" style="background: #F8F8F8; font-weight: bold; border-top: 1px solid #E5E7EB !important; border-bottom: none !important; border-left: none !important; border-right: none !important;">  
+                <!-- size="60" gives the two footer lines room. Without it the unit
+                     defaulted to ~38px and clipped the second line. -->
+                <p:layoutUnit position="south" size="60" style="background: #F8F8F8; font-weight: bold; border-top: 1px solid #E5E7EB !important; border-bottom: none !important; border-left: none !important; border-right: none !important;">
                     <h:panelGroup styleClass="footer-scroll-container" layout="block">
-                        <div style="min-height: 38px; display: flex; align-items: center; justify-content: center;">
+                        <div style="display: flex; align-items: center; justify-content: center;">
                             <h:outputLabel value="version #{versionMsgs.version} @ Dogana e Kosovës" style="color: #6B7280; font-size: 12px; font-weight: 500; letter-spacing: 0.025em;"/>
                         </div>
-                        <div style="min-height: 30px; display: flex; align-items: center; justify-content: center; margin-top: 5px;">
+                        <div style="display: flex; align-items: center; justify-content: center; margin-top: 2px;">
                             <span id="dev-signature">Shaban Ejupi</span>
                         </div>
                     </h:panelGroup>

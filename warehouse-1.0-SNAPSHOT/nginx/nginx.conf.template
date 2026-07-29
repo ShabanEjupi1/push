@@ -13,6 +13,15 @@ http {
     sendfile        on;
     keepalive_timeout  65;
 
+    # Don't advertise the exact nginx version in responses / error pages.
+    server_tokens off;
+
+    # Windows nginx has no logrotate. Unbounded access.log was filling the disk,
+    # which takes the whole box down after a few days. Access logging is off;
+    # errors are still recorded. Re-enable access_log temporarily if you need it.
+    access_log  off;
+    error_log   logs/error.log warn;
+
     upstream warehouse_backend {
         server __BACKEND__;
     }
@@ -41,6 +50,18 @@ http {
         ssl_session_cache          shared:SSL:10m;
         ssl_session_timeout        10m;
 
+        # GlassFish sits on plain HTTP behind us, so it can never set "Secure" on
+        # JSESSIONID itself. We add it here (plus HttpOnly) so the session cookie can
+        # never be sent over the cleartext :80 listener. Needs nginx >= 1.19.3.
+        proxy_cookie_flags ~ secure httponly samesite=lax;
+
+        # Tell browsers to go straight to HTTPS for the next year.
+        add_header Strict-Transport-Security "max-age=31536000" always;
+        # The app is not meant to be framed, sniffed, or to leak URLs via Referer.
+        add_header X-Frame-Options            "SAMEORIGIN" always;
+        add_header X-Content-Type-Options     "nosniff"     always;
+        add_header Referrer-Policy            "same-origin" always;
+
         # bare host -> straight into the app
         location = / {
             return 301 /warehouse/;
@@ -55,5 +76,9 @@ http {
             proxy_read_timeout 300;
             client_max_body_size 50m;
         }
+
+        # The GlassFish admin console must never be reachable through the proxy.
+        location /management/ { return 404; }
+        location /__asadmin/  { return 404; }
     }
 }

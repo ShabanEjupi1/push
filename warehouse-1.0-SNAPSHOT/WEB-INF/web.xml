@@ -27,10 +27,43 @@
     <welcome-file-list>
         <welcome-file>login.xhtml</welcome-file>
     </welcome-file-list>
-    <!-- NOTE: HTTPS is terminated by the nginx reverse proxy in front of GlassFish.
-         GlassFish itself serves plain HTTP on 8080; nginx handles the HTTP->HTTPS
-         redirect. Do NOT add a CONFIDENTIAL security-constraint here, or requests
-         coming from the proxy (plain HTTP) will trigger an infinite redirect loop. -->
+    <!-- HTTPS.
+         GlassFish terminates TLS itself on :443 (SERVE_MODE=glassfish in
+         deploy.bat), and this filter does what the nginx proxy used to do:
+         redirect plain HTTP to HTTPS and set the security headers.
+
+         There is deliberately NO <security-constraint> with CONFIDENTIAL here.
+         That is the textbook way to force HTTPS, but it decides on the container's
+         own view of the request - so the day anything TLS-terminating is put back
+         in front of this app, every request redirects forever. The filter checks
+         X-Forwarded-Proto as well, so it is correct in both layouts.
+
+         It must stay FIRST in the filter chain: redirecting before Shiro runs
+         keeps credentials off the plain-HTTP port entirely, instead of
+         authenticating in cleartext and redirecting afterwards. -->
+    <filter>
+        <filter-name>httpsSecurityFilter</filter-name>
+        <filter-class>mk.com.snt.kc.warehouse.view.security.HttpsSecurityFilter</filter-class>
+        <init-param>
+            <param-name>redirectToHttps</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>httpsPort</param-name>
+            <param-value>443</param-value>
+        </init-param>
+        <!-- Leaves http://127.0.0.1:8080/warehouse/ usable on the server itself,
+             which is how you tell a broken app from broken TLS. -->
+        <init-param>
+            <param-name>allowPlainLocalhost</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>httpsSecurityFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
 
     <listener>
         <listener-class>mk.com.snt.kc.warehouse.view.security.ShiroCdiAwareEnvironmentLoaderListener</listener-class>

@@ -1,6 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE glassfish-web-app PUBLIC "-//GlassFish.org//DTD GlassFish Application Server 3.1 Servlet 3.0//EN" "http://glassfish.org/dtds/glassfish-web-app_3_0-1.dtd">
 <glassfish-web-app error-url="">
+  <!-- Session cookie hardening. This used to be done by nginx
+       (proxy_cookie_flags ~ secure httponly samesite=lax); with GlassFish
+       serving TLS directly there is no proxy left to add the flags.
+
+       cookieSecure=dynamic, not "true": "true" would mark JSESSIONID Secure even
+       when it is handed out over plain HTTP, and the browser would then refuse to
+       send it back on that same connection - so http://127.0.0.1:8080/warehouse/
+       could never hold a login, and neither could anything else if TLS ever fails.
+       "dynamic" sets the flag exactly when the request was secure, which is the
+       behaviour we want and what the proxy effectively did.
+
+       NOTE: element order here is fixed by the glassfish-web-app DTD
+       (session-config before class-loader). Getting it wrong fails deployment
+       with a parse error, not a warning. -->
+  <session-config>
+    <cookie-properties>
+      <property name="cookieSecure" value="dynamic"/>
+      <property name="cookieHttpOnly" value="true"/>
+    </cookie-properties>
+  </session-config>
   <class-loader delegate="true"/>
   <parameter-encoding default-charset="UTF-8"/>
   <jsp-config>

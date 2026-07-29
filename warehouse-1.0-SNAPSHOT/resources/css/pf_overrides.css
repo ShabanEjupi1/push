@@ -240,6 +240,16 @@
     width: 100% !important;
 }
 
+/* The rule above clips with overflow:hidden (to keep the rounded corners), and
+   every th/td is white-space:nowrap. Together that meant a table wider than its
+   container was silently cut off with no way to reach the last columns. Let the
+   inner wrapper scroll sideways instead: the card keeps its rounded border, and
+   the columns stay reachable on a laptop or a narrow window. */
+.ui-datatable .ui-datatable-tablewrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
 .ui-datatable table {
     border-collapse: collapse !important;
     width: 100% !important;
@@ -458,14 +468,19 @@
     box-shadow: none !important;
 }
 
-/* Scrollable Footer Styles */
+/* Footer.
+   This was height:38px + overflow-y:auto, but template.xhtml puts two stacked
+   rows inside it (38px version line + 30px signature line + 5px margin = 73px).
+   The result was a permanently scrollbarred footer with the second line cut in
+   half. Fill the layout unit instead and centre the content in it - the unit is
+   sized by size="60" on the south p:layoutUnit. */
 .footer-scroll-container {
-    height: 38px !important;
-    overflow-y: auto !important;
+    height: 100% !important;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
 }
 
 .footer-scroll-container::-webkit-scrollbar {
