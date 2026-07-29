@@ -109,7 +109,7 @@ REM  So: fail in the first second, naming the file, instead of failing in two
 REM  minutes blaming something else.
 REM --------------------------------------------------------------------------
 set "WHS_MISSING="
-for %%F in (deploy.bat install-services.bat jvm-size.ps1 fix-domain-xml.ps1 healthcheck.ps1) do (
+for %%F in (deploy.bat install-services.bat jvm-size.ps1 fix-domain-xml.ps1 healthcheck.ps1 write-docroot-index.ps1) do (
     if not exist "%APP_DIR%\%%F" set "WHS_MISSING=!WHS_MISSING! %%F"
 )
 if defined WHS_MISSING (

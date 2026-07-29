@@ -6,7 +6,7 @@ REM into deploy-full.log, so a log can be matched to the script that produced
 REM it. Without it there is no way to tell from the output whether the server is
 REM running the current script or a copy from three deployments ago - which has
 REM already cost one debugging session.
-set "SCRIPT_VERSION=2026-07-29.3"
+set "SCRIPT_VERSION=2026-07-29.4"
 
 echo ==========================================================
 echo       Warehouse Application Compilation and Deployment
@@ -387,8 +387,14 @@ REM --------------------------------------------------------------------------
 set "GF_PROTO=configs.config.server-config.network-config.protocols.protocol"
 set "GF_LISTENER=configs.config.server-config.network-config.network-listeners.network-listener"
 
-call "%ASADMIN%" set %GF_PROTO%.http-listener-2.ssl.cert-nickname=%CERT_ALIAS%
-call "%ASADMIN%" set %GF_PROTO%.http-listener-2.security-enabled=true
+REM  Every one of these goes through :gf_set, which retries. The FIRST asadmin
+REM  command after a domain start is the one that gets "V3 cannot process this
+REM  command at this time" - and it used to be this one, cert-nickname, i.e. the
+REM  single setting that decides which certificate :443 presents.
+REM  The argument is quoted because cmd splits a CALL argument on '=' as well as
+REM  on spaces, which would hand :gf_set only the property name.
+call :gf_set "%GF_PROTO%.http-listener-2.ssl.cert-nickname=%CERT_ALIAS%"
+call :gf_set "%GF_PROTO%.http-listener-2.security-enabled=true"
 
 REM  READ THE LONG NOTE AT THE TOP OF THIS FILE BEFORE CHANGING THESE THREE.
 REM  tls-enabled=false does NOT mean "no TLS". In Grizzly 1.9 these three flags
@@ -397,16 +403,16 @@ REM  with all three false Grizzly never calls setEnabledProtocols and the JDK 7
 REM  server defaults apply instead - TLS 1.0, 1.1 AND 1.2. Setting
 REM  tls-enabled=true here is what pins the listener to TLS 1.0 and produces
 REM  ERR_SSL_VERSION_OR_CIPHER_MISMATCH in every current browser.
-call "%ASADMIN%" set %GF_PROTO%.http-listener-2.ssl.ssl2-enabled=false
-call "%ASADMIN%" set %GF_PROTO%.http-listener-2.ssl.ssl3-enabled=false
-call "%ASADMIN%" set %GF_PROTO%.http-listener-2.ssl.tls-enabled=false
+call :gf_set "%GF_PROTO%.http-listener-2.ssl.ssl2-enabled=false"
+call :gf_set "%GF_PROTO%.http-listener-2.ssl.ssl3-enabled=false"
+call :gf_set "%GF_PROTO%.http-listener-2.ssl.tls-enabled=false"
 
-call "%ASADMIN%" set %GF_LISTENER%.http-listener-2.port=%HTTPS_PORT%
-call "%ASADMIN%" set %GF_LISTENER%.http-listener-2.enabled=true
+call :gf_set "%GF_LISTENER%.http-listener-2.port=%HTTPS_PORT%"
+call :gf_set "%GF_LISTENER%.http-listener-2.enabled=true"
 
 REM http-listener-1 stays on 8080 for local debugging; the redirect-port makes
 REM any redirect it issues land on the clean :443 URL.
-call "%ASADMIN%" set %GF_PROTO%.http-listener-1.http.redirect-port=%HTTPS_PORT%
+call :gf_set "%GF_PROTO%.http-listener-1.http.redirect-port=%HTTPS_PORT%"
 
 REM --------------------------------------------------------------------------
 REM  Port 80. Staff type "10.10.10.7/warehouse" without a scheme, so the browser
@@ -420,8 +426,8 @@ if errorlevel 1 (
     echo Adding a listener on port %HTTP_PORT% ^(redirects to HTTPS^)...
     call "%ASADMIN%" create-network-listener --listenerport %HTTP_PORT% --protocol http-listener-1 --enabled=true http-listener-80
 ) else (
-    call "%ASADMIN%" set %GF_LISTENER%.http-listener-80.port=%HTTP_PORT% >nul
-    call "%ASADMIN%" set %GF_LISTENER%.http-listener-80.enabled=true >nul
+    call :gf_set "%GF_LISTENER%.http-listener-80.port=%HTTP_PORT%"
+    call :gf_set "%GF_LISTENER%.http-listener-80.enabled=true"
 )
 
 REM  ...and attach it to the virtual server. create-network-listener does NOT do
@@ -449,18 +455,21 @@ REM  page in it. Cheaper and far less risky than making the app the virtual
 REM  server's default-web-module, which changes how every context path resolves.
 REM --------------------------------------------------------------------------
 set "GF_DOCROOT=%GLASSFISH_ROOT%\glassfish\domains\domain1\docroot"
-REM  Written from PowerShell rather than a series of ECHOs: HTML is made almost
-REM  entirely of the characters cmd treats as redirection, and escaping them
-REM  inside an IF block is how you get a half-written file and no error.
-REM  The markup uses NO double-quote characters on purpose - one here would
-REM  close the batch string that is protecting the '<' and '>' from cmd, and
-REM  unquoted attribute values are valid HTML as long as they contain no spaces.
-if exist "%GF_DOCROOT%" powershell -NoProfile -Command ^
-    "$h = '<!DOCTYPE html><html><head><meta charset=utf-8>' + " ^
-    "'<meta http-equiv=refresh content=0;url=%CONTEXT_ROOT%/>' + " ^
-    "'<title>Warehouse</title></head><body>' + " ^
-    "'<a href=%CONTEXT_ROOT%/>Warehouse</a></body></html>'; " ^
-    "Set-Content -Path '%GF_DOCROOT%\index.html' -Value $h -Encoding ASCII"
+REM  Handed to a -File script rather than built inline. It WAS inline - five
+REM  caret-continued "..." fragments ending in a Set-Content - and on the server
+REM  PowerShell received only the tail of that command line and died with
+REM      Unexpected token '-Value' in expression or statement.
+REM  so the page was never written. Nothing noticed, because the line ran as the
+REM  body of an IF with no error check. HTML is made almost entirely of the
+REM  characters cmd treats specially; -File passes arguments through argv, where
+REM  none of that parsing happens. See write-docroot-index.ps1.
+if not exist "%APP_DIR%\write-docroot-index.ps1" (
+    echo WARNING: write-docroot-index.ps1 is not in %APP_DIR% - the bare
+    echo          https://%SERVER_IP%/ redirect page was NOT written.
+) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%APP_DIR%\write-docroot-index.ps1" -Docroot "%GF_DOCROOT%" -ContextRoot "%CONTEXT_ROOT%"
+    if errorlevel 1 echo WARNING: the docroot redirect page could not be written ^(see above^).
+)
 
 REM --------------------------------------------------------------------------
 REM  Firewall. deploy.bat used to open 80/443 only in the nginx step; in
@@ -487,6 +496,12 @@ if errorlevel 1 (
     echo            %GLASSFISH_ROOT%\glassfish\domains\domain1\logs\server.log
     goto :error
 )
+REM  restart-domain returns as soon as the admin listener is back, which is the
+REM  same "open but not ready" window that costs the first set command above.
+REM  The next remote commands are undeploy/deploy in step [4/5], and a deploy
+REM  rejected with "V3 cannot process this command at this time" leaves the
+REM  application off the server while the script carries on.
+call :wait_for_admin_ready 120
 echo SSL configuration applied.
 
 :ssl_done
@@ -981,10 +996,7 @@ echo Starting GlassFish domain...
 call :do_start_domain
 echo Waiting for the admin port to answer
 call :wait_for_admin_port 90
-if not errorlevel 1 (
-    echo GlassFish is up - admin port 4848 is answering.
-    exit /b 0
-)
+if not errorlevel 1 goto :sdv_port_up
 
 echo.
 echo WARNING: domain1 did not come up within 90 seconds.
@@ -993,13 +1005,86 @@ call :clear_start_blockers
 call :do_start_domain
 echo Waiting for the admin port to answer
 call :wait_for_admin_port 120
-if not errorlevel 1 (
-    echo GlassFish is up - admin port 4848 is answering.
-    exit /b 0
-)
+if not errorlevel 1 goto :sdv_port_up
 
 call :report_start_failure
 exit /b 1
+
+:sdv_port_up
+echo GlassFish is up - admin port 4848 is answering.
+REM  ...but "answering" is not "ready". The admin listener binds 4848 early in
+REM  the boot, while the V3 command runtime is still coming up, and every
+REM  remote command sent in that window is rejected with
+REM      V3 cannot process this command at this time, please wait
+REM      Command set failed.
+REM  which asadmin prints and then EXITS - it does not retry. That is what
+REM  silently lost "set ...http-listener-2.ssl.cert-nickname=warehouse" on the
+REM  first command after a start: the listener kept the default s1as
+REM  certificate, so :443 came up serving the wrong cert and every browser
+REM  showed a name mismatch. Nothing in the output said so; the five set
+REM  commands after it all succeeded.
+call :wait_for_admin_ready 120
+if errorlevel 1 (
+    echo WARNING: the admin runtime is still not accepting commands. The
+    echo          configuration steps below may fail - re-run the script if they do.
+)
+exit /b 0
+
+REM --------------------------------------------------------------------------
+REM  :wait_for_admin_ready <seconds> - poll until asadmin commands are actually
+REM  processed, not merely accepted by an open socket.
+REM  A cheap read-only 'get' is used as the probe because it fails in exactly
+REM  the same way a 'set' would while the runtime is still starting.
+REM --------------------------------------------------------------------------
+:wait_for_admin_ready
+set /a WAR_LEFT=%1
+echo Waiting for the admin runtime to accept commands
+:war_loop
+call "%ASADMIN%" get configs.config.server-config.network-config.network-listeners.network-listener.http-listener-1.port >nul 2>&1
+if not errorlevel 1 (
+    echo.
+    echo The admin runtime is ready.
+    exit /b 0
+)
+REM  Each asadmin call is a JVM start, so a tick is nearer 5 seconds than 2.
+set /a WAR_LEFT-=5
+if !WAR_LEFT! LEQ 0 (
+    echo.
+    exit /b 1
+)
+powershell -NoProfile -Command "Start-Sleep -s 2" >nul
+<nul set /p "=."
+goto :war_loop
+
+REM --------------------------------------------------------------------------
+REM  :gf_set <property=value> - asadmin set, but retried.
+REM  asadmin treats "V3 cannot process this command at this time" as a plain
+REM  failure and gives up immediately. :wait_for_admin_ready makes that rare,
+REM  but the runtime can still be busy (a deploy finishing, the memory manager
+REM  reclaiming), and a dropped 'set' here is a mis-configured listener that
+REM  nobody sees until a browser complains. So: try again, and if it genuinely
+REM  will not take, SAY which property was lost.
+REM --------------------------------------------------------------------------
+:gf_set
+setlocal
+set "GS_PROP=%~1"
+set /a GS_TRY=0
+:gs_loop
+set /a GS_TRY+=1
+call "%ASADMIN%" set "!GS_PROP!"
+if not errorlevel 1 (
+    endlocal
+    exit /b 0
+)
+if !GS_TRY! GEQ 4 (
+    echo WARNING: 'asadmin set !GS_PROP!' failed !GS_TRY! times and was given up on.
+    echo          The listener is NOT fully configured - re-run this script.
+    endlocal
+    exit /b 1
+)
+echo    retrying in 5s: !GS_PROP!
+powershell -NoProfile -Command "Start-Sleep -s 5" >nul
+goto :gs_loop
 
 REM --------------------------------------------------------------------------
 REM  :clear_start_blockers
